@@ -29,6 +29,10 @@
     	this.option = option;
     	this.fileMap = new DoublyLinkedHashMap();
     	this.init(option);
+    	
+    	this.isIngUpload = false;
+    	this.isIngDownload = false;
+    	this.isIngRemove = false;
    	};
 	
     SimpleFileManager.prototype.init = function (option) {
@@ -473,6 +477,9 @@
 		
 		SimpleFileManager.prototype.downloadFile = function (e, itemId, f) {
 			var _this = this;
+			
+			_this.isIngDownload = true;
+			
 			var promise = new Promise();
 			var item = _this.getElement(itemId);
 			var downloadUrl = _this.getConfig('url', 'file_download');
@@ -494,6 +501,7 @@
 			})
 			.then(function () {
 				_this.callEventHandler('file_download_after');
+				_this.isIngDownload = false;
 			});
 			
 		};
@@ -599,6 +607,12 @@
 		SimpleFileManager.prototype.removeFile = function (e, itemId, f) {
 			var _this = this;
 			
+			if(_this.isIngRemove ){
+				alert('삭제 중입니다.');
+				return false;
+			}
+			_this.isIngRemove  = true;	
+			
 			if( !confirm(_this.getConfig('message', 'file_remove')) ){
 				return;
 			}
@@ -635,6 +649,8 @@
 					removedFile: f,
 					removedItem: item,
 				});
+				
+				_this.isIngRemove  = false;
 			});
 			
 		};
@@ -654,10 +670,17 @@
 		
 		SimpleFileManager.prototype.uploadFile = function () {
 			var _this = this;
+			
+			if(_this.isIngUpload){
+				alert('업로드 중입니다.');
+				return false;
+			}
+			_this.isIngUpload = true;
+			
 			var promise = new Promise();
 			var formData = _this.createParamFiles();
 			var fileUploadUrl = _this.getConfig('url', 'file_upload');
-			
+		
 			promise
 			.then(function (progress) {
 				progress(_this.callEventHandler('file_upload_before'));
@@ -679,6 +702,7 @@
 			})
 			.then(function (_, res) {
 				_this.callEventHandler('file_upload_after', { response: res });
+				_this.isIngUpload = false;
 			});
 			
 		};
