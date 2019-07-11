@@ -76,6 +76,9 @@
   			'file_upload_error': '파일 업로드 도중 에러가 발생했습니다.',
   			'file_remove_error': '파일 삭제 도중 에러가 발생했습니다.',
   			'file_download_error': '파일 다운로드 도중 에러가 발생했습니다.',
+  			'file_upload_is_ing': '업로드 중입니다',
+  			'file_remove_is_ing': '삭제 중입니다',
+  			'file_download_is_ing': '다운로드 중입니다',
   		},
   		'layout': function (data) {
   			return '<fieldset><button id="'+data.fileUploadId+'" style="float:right; position:relative; bottom:13px;">upload</button><div id="'+data.fileAreaId+'" style="z-index:1;" width="100%" height="100%" fileDragArea><p dropzone-file-area-message></p></div></fieldset>';
@@ -608,7 +611,7 @@
 			var _this = this;
 			
 			if(_this.isIngRemove ){
-				alert('삭제 중입니다.');
+    		alert(_this.getConfig('message', 'file_remove_is_ing'));
 				return false;
 			}
 			_this.isIngRemove  = true;	
@@ -672,7 +675,7 @@
 			var _this = this;
 			
 			if(_this.isIngUpload){
-				alert('업로드 중입니다.');
+  			alert(_this.getConfig('message', 'file_upload_is_ing'));
 				return false;
 			}
 			_this.isIngUpload = true;
