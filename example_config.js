@@ -3,7 +3,7 @@
  *  @Method setConfig @ParamType Object    @Desc SFM 환경을 설정한다. SFM의 공통 속성 정의 함수이며 SFM의 속성을 정의. 아래 예시 참고 
  *  			   getFiles   @ParamType formData @Desc url.file_get_list 에 정의한 url에서 파일 데이터 배열을 가져옴
  * 
- *  @Constructor option 객체, setConfig를 통해 정의된 공통 속성을 재정의함. ( 재정의 불가 속성 : 'eventHandler', 'fix', 'key' )
+ *  @Constructor option 객체, setConfig를 통해 정의된 기본 속성을 재정의함. ( 재정의 불가 속성 : 'eventHandler', 'fix', 'key' )
  *  
  * ********
  *  @Desc *

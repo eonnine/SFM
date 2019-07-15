@@ -165,15 +165,16 @@
 			target = ( target == undefined ) ? this.getConfig() : target;
 			
 			for(var key in option){
-				if(exceptProps.indexOf(key) !== -1)
+				if(exceptProps.indexOf(key) !== -1){
 					continue;
+				}
 				
 				if(typeof target[key] === 'object' 
 					&& target[key] != null
 					&& target[key].constructor.name == 'Object'){
 						
 					this.initConfig(option[key], exceptProps, target[key]);
-				}
+				} 
 				else{
 					target[key] = option[key];
 				}
@@ -181,26 +182,28 @@
 		};
 			
 		SimpleFileManager.prototype.addCustomEventListener = function (element, type, listener, args) {
+			var _this = this;
 			element.addEventListener(type, function (e) {
-				this.preventEvent(e);
+				_this.preventEvent(e);
 
 				var paramArray = [];
 
 				paramArray.push(e);
 					
 				if(Array.isArray(args)){
-					for(var i in args)
+					for(var i in args){
 						paramArray.push(args[i]);
+					}
 				}
 				else{
 					paramArray.push(args);
 				}
 					
-				listener.apply(this, paramArray);
+				listener.apply(_this, paramArray);
 					
-			}.bind(this), false);
+			}, false);
 				
-			return this;
+			return _this;
 		};
 		
 		SimpleFileManager.prototype.addFile = function (files) {
@@ -218,9 +221,11 @@
 				
 			for(var i=0, f; f=files[i]; i++){
 				
-				if(!this.fileValidator(f)) return;
+				if(!this.fileValidator(f)){
+					return;
+				}
 
-				var key = this.getItemKey(f.name);
+				var key = this.makeItemKey(f.name);
 				var newFile = this.createNewFile(f, key);
 						
 				this.addFileToFileMap(newFile, true);
@@ -238,24 +243,28 @@
 			var fileDownloadId = this.addSeparator(this.elementId.fileDownload, f.name);
 			var itemkeyAreaHtml = '';
 			var itemHtml = this.getConfig('item')({
-									file: f,
-									itemId: itemId,
-									fileUploadId: fileUploadId,
-									fileRemoveId: fileRemoveId,
-									fileDownloadId: fileDownloadId,
-								});
+				file: f,
+				itemId: itemId,
+				fileUploadId: fileUploadId,
+				fileRemoveId: fileRemoveId,
+				fileDownloadId: fileDownloadId,
+			});
 					
 			var keys = Object.keys(this.getConfig('key'));
 			
 			for(var i=0, key; key=keys[i]; i++){
-				if(i == 0) itemkeyAreaHtml = '<span '+this.elementId.itemKeyArea+'>';
+				if(i == 0){
+					itemkeyAreaHtml = '<span '+this.elementId.itemKeyArea+'>';
+				}
 					
 				var value = ( f[key] != undefined ) ? f[key] : '';
 					
 				itemkeyAreaHtml += '<input type="hidden" id="' + key + '" value="' + value + '"/>';
 
-				if(i == (keys.length - 1)) itemkeyAreaHtml += '</span>';
-			};
+				if(i == (keys.length - 1)){
+					itemkeyAreaHtml += '</span>';
+				}
+			}
 					
 			itemHtml = '<span id="'+itemId+'">'+itemHtml+itemkeyAreaHtml+'</span>';
 				
@@ -264,11 +273,14 @@
 			var fileRemoveElement = this.getElement(fileRemoveId);
 			var fileDownloadElement = this.getElement(fileDownloadId);
 			
-			if(fileRemoveElement != null)
+			if(fileRemoveElement != null){
 				this.addCustomEventListener(fileRemoveElement, this.getConfig('event', 'file_remove'), this.removeFile, [itemId, f]);
+			}
 					
-			if(fileDownloadElement != null)
-				this.addCustomEventListener(fileDownloadElement, this.getConfig('event', 'file_download'), this.downloadFile, [itemId, f])
+			if(fileDownloadElement != null){
+				this.addCustomEventListener(fileDownloadElement, this.getConfig('event', 'file_download'), this.downloadFile, [itemId, f]);
+			}
+			
 		};
 		
 		
@@ -285,8 +297,9 @@
 			var len = arguments.length;
 			var result = '';
 			
-			for(var i=0; i<len; i++)
+			for(var i=0; i<len; i++){
 				result += arguments[i] + '-';
+			}
 			
 			return result.slice(0, -1);
 		};
@@ -364,10 +377,13 @@
 			var fileListParamName = this.getConfig('file', 'file_list_parameter_name') + '[' + index +  '].';
 			var fileParamName = this.getConfig('file', 'file_parameter_name');
 			
-			if(isParamTypeList)
+			if(isParamTypeList){
 				return ( isParamTypeFile ) ? fileListParamName + fileParamName : fileListParamName + name;
-			else
+			}
+			else {
 				return ( isParamTypeFile ) ? fileParamName : name;
+				
+			}
 		};
 		
 		/**
@@ -415,8 +431,9 @@
 			var formData = new FormData();
 			var files = this.fileMap.array();
 			
-			for(var i=0, file; file=files[i]; i++)
+			for(var i=0, file; file=files[i]; i++){
 				this.setParamFormData(formData, file, true, i);
+			}
 			
 			return formData;
 		};
@@ -488,14 +505,14 @@
 			var downloadUrl = _this.getConfig('url', 'file_download');
 				
 			promise
-			.then(function (progress) {
-				progress(_this.callEventHandler('file_download_before'));
+			.then(function (resolve) {
+				resolve(_this.callEventHandler('file_download_before'));
 			})
-			.then(function (progress) {
+			.then(function (resolve) {
 				if(downloadUrl != null && _this.trim(downloadUrl) !== ''){
 					try{
 						location.href = downloadUrl;
-						progress();
+						resolve();
 					} catch(error) {
 						_this.throwsError('SFM: fail download file:', downloadUrl);
 						alert(_this.getConfig('message', 'file_download_error'));
@@ -558,7 +575,9 @@
 			var size = arguments.length;
 			var prop = this.config;
 			
-			if(size == 0) return prop;
+			if(size == 0){
+				return prop;
+			}
 			
 			for(var i=0, arg; arg=arguments[i]; i++){
 				if(prop[arg] != null) prop = prop[arg];
@@ -573,14 +592,22 @@
 		
 		SimpleFileManager.prototype.getFiles = function (data) {
 			var fileGetListUrl = this.getConfig('url', 'file_get_list'); 
-			
-			this.ajax.get(fileGetListUrl, data, function (files) {
-				this.addFile(files);
+			var _this = this;
+			_this.ajax.get(fileGetListUrl, data, function (files) {
+				_this.addFile(files);
 			});
 		};
 		
+		SimpleFileManager.prototype.getNewFiles = function (data) {
+			var newFiles = [];
+			this.fileMap.each(function (i, item) {
+				newFiles.push(item.value);
+			});
+			return newFiles;
+		};
+		
 		//동일한 파일명이 존재할 때 (2), (3), (4).....를 붙임
-		SimpleFileManager.prototype.getItemKey = function (k) {
+		SimpleFileManager.prototype.makeItemKey = function (k) {
 			var suffix = 1;
 			var key = k;
 			var name = null;
@@ -627,25 +654,26 @@
 			var fileRemoveUrl = _this.getConfig('url', 'file_remove');
 			
 			promise
-			.then(function (progress) {
-				progress(_this.callEventHandler('file_remove_before', { key: key, file: f, item: item }));
+			.then(function (resolve) {
+				resolve(_this.callEventHandler('file_remove_before', { key: key, file: f, item: item }));
 			})
-			.then(function (progress) {
+			.then(function (resolve) {
 				if(fileRemoveUrl == null || _this.trim(fileRemoveUrl) === ''){
 					fileRemoveUrl = location.href;
 				}
 				
 				_this.ajax.post(fileRemoveUrl, formData, function (res) {
-					progress(res);
+					resolve(res);
 				}.bind(_this), function () {
 					_this.throwsError('SFM: fail remove file:', fileRemoveUrl);
 					alert(_this.getConfig('message', 'file_remove_error'));
 				}.bind(_this));
 			})
 			.then(function (_, res) {
+				_this.removeCustomEventListener(f);
 				_this.fileMap.remove(key);
 				item.parentNode.removeChild(item);
-						
+				
 				_this.callEventHandler('file_remove_after', {
 					key: key,
 					response: res,
@@ -658,9 +686,25 @@
 			
 		};
 		
+		SimpleFileManager.prototype.removeCustomEventListener = function (f) {
+			var fileRemoveId = this.addSeparator(this.elementId.fileRemove, f.name);
+			var fileDownloadId = this.addSeparator(this.elementId.fileDownload, f.name);
+			var fileRemoveElement = this.getElement(fileRemoveId);
+			var fileDownloadElement = this.getElement(fileDownloadId);
+
+			if(fileRemoveElement != null){
+				fileRemoveElement.removeEventListener(this.getConfig('event', 'file_remove'), this.removeFile);
+			}
+					
+			if(fileDownloadElement != null){
+				fileDownloadElement.removeEventListener(this.getConfig('event', 'file_download'), this.downloadFile);
+			}
+		};
+		
 		SimpleFileManager.prototype.setDefaultMethod = function () {
 			this['uploadFile'] = this.uploadFile;
 			this['getFiles'] = this.getFiles;
+			this['getNewFiles'] = this.getNewFiles;
 		};
 		
 		SimpleFileManager.prototype.throwsError = function (msg, object) {
@@ -685,17 +729,17 @@
 			var fileUploadUrl = _this.getConfig('url', 'file_upload');
 		
 			promise
-			.then(function (progress) {
-				progress(_this.callEventHandler('file_upload_before'));
+			.then(function (resolve) {
+				resolve(_this.callEventHandler('file_upload_before'));
 			})
-			.then(function (progress) {
+			.then(function (resolve) {
 				if(fileUploadUrl == null || _this.trim(fileUploadUrl) === ''){
 					fileUploadUrl = location.href;
 				}
 				
 				_this.ajax.post(fileUploadUrl, formData, function (res) {
 
-					progress(res);
+					resolve(res);
 					
 				}.bind(_this), function(){
 					_this.throwsError('SFM: fail upload:', fileUploadUrl);
@@ -765,10 +809,10 @@
 			this.each(function (i, item) {
 				if(k == item.key){
 					result = { 
-									index: i, 
-									key: item.key, 
-									value: item.value, 
-									};
+						index: i, 
+						key: item.key, 
+						value: item.value, 
+					};
 					return false;
 				}
 			});
@@ -786,10 +830,10 @@
 			this.each(function (i, item) {
 				if(index == i){
 					result = { 
-									index: i, 
-									key: item.key, 
-									value: item.value 
-								};
+						index: i, 
+						key: item.key, 
+						value: item.value 
+					};
 					return false;
 				}
 			});
@@ -838,30 +882,35 @@
 		 * key에 해당하는 데이터를 삭제
 		 */
 		DoublyLinkedHashMap.prototype.	remove = function (k) {
-			if(this.map[k] == null) 
+			if(this.map[k] == null){
 				return;
+			}
 	
 			var item = this.map[k];
 			
 			if(this.head === item){
-				if(item.next != null)
+				if(item.next != null){
 					item.next.prev = null;
-			
-					this.head = item.next;
 				}
+			
+				this.head = item.next;
+			}
 			
 			if(this.tail === item){
-				if(item.prev != null)
+				if(item.prev != null){
 					item.prev.next = null;
-			
-					this.tail = item.prev;
 				}
 			
-			if(item.next != null)
+				this.tail = item.prev;
+			}
+			
+			if(item.next != null){
 				item.next.prev = item.prev;
+			}
 		
-			if(item.prev != null)
+			if(item.prev != null){
 				item.prev.next = item.next;
+			}
 			
 			delete this.map[k];
 			
@@ -973,7 +1022,7 @@
 		};
 		
 		Promise.prototype.createProgress = function () {
-			return function progress (data) {
+			return function resolve (data) {
 				this.isIng = false;
 				if(data === false){
 					this.stop();
