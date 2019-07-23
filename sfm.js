@@ -6,7 +6,7 @@
  */
 (function(factoryName, factory){
 	if(typeof define === 'function' && define.amd !== undefined){
-		define('SFM', {}, function(){
+		define(function(){
 			return factory;
 		});
 	}
