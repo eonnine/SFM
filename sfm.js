@@ -50,8 +50,6 @@
 	 * SFM 공유 속성
 	 */
  	SimpleFileManager.prototype.config = {
-		//table 구조에 맞게 선언. { 테이블 컬럼명: 타입[string, number] }
-		//타입에 따라 서버로 전송되는 기본값이 달라짐. string => '', number => 0
 		key: { fileIdx: 'number', fileSeq: 'number' }, 
 		fix: { 
 	  	item: 'item', 
@@ -62,20 +60,14 @@
 			input_file: 'input-file', 
 			item_area: 'file-area',
 		},
-		/*
-		 * 파일 관련 속성
-		 */
 		file: {
-			file_size: '52428800', // 50mb
+			file_size: '52428800',
 			file_count: 0,
 		  	file_extension: [],
 		  	file_extension_except: [],
 	  		file_parameter_name: 'file',
 	  		file_list_parameter_name: 'files',
 		},
-		/*
-		 * SFM에서 사용되는 메세지 속성
-		 */
 		message: {
 			file_remove: '삭제하시겠습니까?',
 			file_size_max_overflow: '허용된 크기(50mb)보다 용량이 큰 파일입니다',
@@ -90,58 +82,25 @@
 			file_remove_is_ing: '삭제 중입니다',
 			file_download_is_ing: '다운로드 중입니다',
 		},
-		/*
-		 *	SFM 전체 레이아웃 폼 속성
-		 * SFM 객체 생성시 기본적으로 생성되는 바탕 폼
-		 */
 		layout: function (fileAreaId, fileUploadId) {
-			// fileAreaId: SFM 바탕 폼 겍체에 주는 ID
-			// fileUploadId: file upload 이벤트를 실행할 요소에 주는 ID
 			return '<fieldset><button id="'+fileUploadId+'" style="float:right; position:relative; bottom:13px;">upload</button><div id="'+fileAreaId+'" style="z-index:1;" width="100%" height="100%" default-class-dropzone><p dropzone-file-area-message></p></div></fieldset>';
 		},
-		/*
-		 * SFM 반복부 속성
-		 * 파일을 추가할 때마다 해당 속성으로 정의된 폼이 추가됨
-		 */
 		item: function (file, fileRemoveId, fileDownloadId) {
-			// file: 추가된 파일 폼에 해당하는 파일 객체
-			// fileRemoveId: 이 파일의 다운로드 이벤트를 실행할 요소에 주는 ID 
-			// fileDownloadId: 이 파일의 삭제 이벤트를 실행할 요소에 주는 ID
 			return '<span style="z-index:10;"><p>&nbsp;&nbsp;<b id="'+fileDownloadId+'" style="width:12px; height:12px; margin-left:5px; font-size:12px; cursor:pointer;">▼</b>&nbsp;file: <strong>' + file.name + '</strong>&nbsp;&nbsp;&nbsp;type: <strong>' + file.type + '</strong>&nbsp;&nbsp;&nbsp;size: <strong>' + file.size + '</strong>bytes<data style="display:none;"></data><b style="width:12px; height:12px; margin-left:5px; font-size:12px; cursor:pointer;" id="'+fileRemoveId+'">X</b></p></span>';
 		},
-		/*
-		 * 파일 목록 가져오기, 업로드, 삭제, 다운로드 url 속성
-		 */
 		url: {
 			file_get_list: '',
 			file_upload: '',
 			file_remove: '',
 			file_download: '',
 		},
-		/**
-		 * 업로드, 삭제, 다운로드의 이벤트 속성
-		 */
 		event: {
 			file_upload: 'click',
 			file_remove: 'click',
 			file_download: 'click',
 		},
-		/*
-		 * SFM hooks
-		 * @Param param 
-		 * 		@Prop layout_create_after: layout 속성에 정의한 바탕 폼이 생성된 후 실행.
-		 * 		@Prop file_upload_before: upload 실행 직전 실행. false를 리턴하면 업로드 중지.
-		 * 		@Prop file_upload_after: upload 실행 후에 실행.
-		 * 		@Prop file_remove_before: file 삭제 직전 실행. false를 리턴하면 삭제 중지.
-		 * 		@Prop file_remove_after: file 삭제 후에 실행.
-		 * 		@Prop file_download_before: file 다운로드 직전 실행. false를 리턴하면 다운로드 중지.
-		 * 		@Prop file_download_after: file 다운로드 후에 실행.
-		 */
 		eventHandler: {
 			layout_create_after: function (param) {
-				/*
-				 * config에 설정된 레이아웃이 그려진 후 이벤트리스너 등록
-				 */
 				var FileMouseHover = function (e) {
 					e.stopPropagation();
 					e.preventDefault();
@@ -266,6 +225,7 @@
 		this.callee.getFiles = this.getFiles.bind(this);
 		this.callee.uploadFile = this.uploadFile.bind(this);
 		this.callee.getNewFiles = this.getNewFiles.bind(this);
+		this.callee.getFileToFormData = this.getFileToFormData.bind(this);
 	}
 
 	/*
@@ -615,14 +575,16 @@
 	}
 	
 	/**
-	 * 파일 ㅂ열의 파라미터 만들기
+	 * 파일 배열의 파라미터 만들기
 	 */
-	SimpleFileManager.prototype.makeParamFiles = function () {
-		var formData = new FormData();
+	SimpleFileManager.prototype.makeParamFiles = function (formData) {
+		var formData = ( formData ) ? formData : new FormData();
 		var files = this.fileMap.array();
+		
 		files.forEach(function (file, i) {
 			this.setParamFormData(formData, file, true, i);
 		}.bind(this));
+		
 		return formData;
 	}
 	
@@ -639,6 +601,7 @@
 		var keys = this.getConfig('key');
 		var el;
 		var i;
+		
 		//파일 키값 세팅
 		for(i=0, el; el=keyAreaElementNodes[i]; i++){
 			if(__hasProp.call(keys, el.id)){
@@ -648,6 +611,7 @@
 				);
 			}
 		};
+		
 		//파일 세팅
 		formData.append( 
 			this.getParamName(isParamTypeList, true, index),
@@ -668,6 +632,10 @@
 			// 파라미턱 타입이 파일인지
 			return ( isParamTypeFile ) ? fileParamName : name;
 		}
+	}
+	
+	SimpleFileManager.prototype.getFileToFormData = function (formData) {
+		return this.makeParamFiles(formData);
 	}
 	
 	SimpleFileManager.prototype.getFiles = function (data) {
@@ -724,14 +692,14 @@
 	SimpleFileManager.prototype.callConfigEventHandler = function (handlerName, param) {
 		var option = this.option;
 		var flag = true;
-			
+		
 		param = ( param === undefined ) ? {} : param
-		param.self = this.getElement(this.option.id);
+		param.self = this.getElement(option.id);
 			
 		/**
 		 * config 속성에 설정된 전역 이벤트핸들러 실행
 		 */
-		flag = this.getConfig('eventHandler')[handlerName](this.copyObject(param));
+		flag = this.searchProp(this.config, ['eventHandler', handlerName])( this.copyObject(param) );
 			
 		/*
 		 * SMF 생성자 옵션에 정의한 이벤트핸들러가 있다면 실행

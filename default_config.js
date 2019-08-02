@@ -6,7 +6,8 @@
  *  변경하고자 할 때는 반드시 변경할 속성만 선언하세요.
  *  아래는 초기 설정값입니다.
  */
-SFM.prototype.setConfig({
+'use strict'
+window.SFM.prototype.setConfig({
 	//파일 table 구조에 맞게 선언. { 테이블 컬럼명: 타입[string, number], ... }
 	//타입에 따라 서버로 전송되는 기본값이 달라짐. string => '', number => 0
 	key: { fileIdx: 'number', fileSeq: 'number' }, 
@@ -14,12 +15,12 @@ SFM.prototype.setConfig({
 	 * 파일 추가시 유효성 검사할 속성
 	 */
 	file: {
-		file_size: '52428800', // 사이즈 제한
+		file_size: '52428800', // 사이즈 제한, 50mb
 		file_count: 0, // 파일 개수 제한
   	file_extension: [], // 허용할 확장자
   	file_extension_except: [], // 제외할 확장자
-		file_parameter_name: 'file', //단건 파일 파라미터 기본 키값 
-		file_list_parameter_name: 'files', // 다중 파일 파리미터 기본 키값
+		file_parameter_name: 'file', //단건 파일 파라미터 기본 키값, 여러 SFM객체별로 다르게 지정하여 한 DTO로 바인딩할 수 있음.
+		file_list_parameter_name: 'files', // 다중 파일 파리미터 기본 키값, 여러 SFM객체별로 다르게 지정하여 한 DTO로 바인딩할 수 있음.
 	},
 	/**
 	 * SFM에서 사용되는 메세지
@@ -28,12 +29,12 @@ SFM.prototype.setConfig({
 		file_remove: '삭제하시겠습니까?',
 		file_size_max_overflow: '허용된 크기(50mb)보다 용량이 큰 파일입니다',
 		file_count_over: '허용된 개수를 초과합니다',
-		file_extension: '허용된 확장자가 아닙니다.',
-		file_extension_except: '허용된 확장자가 아닙니다.',
-		file_get_error: '파일 목록을 불러오는 도중 에러가 발생했습니다.',
-		file_upload_error: '파일 업로드 도중 에러가 발생했습니다.',
-		file_remove_error: '파일 삭제 도중 에러가 발생했습니다.',
-		file_download_error: '파일 다운로드 도중 에러가 발생했습니다.',
+		file_extension: '허용된 확장자가 아닙니다',
+		file_extension_except: '허용된 확장자가 아닙니다',
+		file_get_error: '파일 목록을 불러오는 도중 에러가 발생했습니다',
+		file_upload_error: '파일 업로드 도중 에러가 발생했습니다',
+		file_remove_error: '파일 삭제 도중 에러가 발생했습니다',
+		file_download_error: '파일 다운로드 도중 에러가 발생했습니다',
 		file_upload_is_ing: '업로드 중입니다',
 		file_remove_is_ing: '삭제 중입니다',
 		file_download_is_ing: '다운로드 중입니다',
@@ -77,8 +78,10 @@ SFM.prototype.setConfig({
 		file_download: 'click',
 	},
 	/**
-	 * SFM hooks
-	 * SFM 을 사용할 때 발생하는 이벤트들의 훅
+	 * SFM을 사용할 때 발생하는 이벤트 훅
+	 * eventHandler는 다른 속성들과 다르게 setConfig에서 정의한 훅과 SFM 객체별로 option에서 정의한 훅이 전부 실행된다.
+	 * 즉 덮어쓰는 개념이 아니고 추가하는 개념.
+	 * setCofig에서 정의한 훅이 먼저 실행되고 option에서 정의한 훅이 나중에 실행된다.
 	 * 	@Prop layout_create_after layout 속성에 정의한 바탕 폼이 생성된 후 실행.
 	 * 	@Prop file_upload_before upload 실행 직전 실행. false를 리턴하면 업로드 중지.
 	 * 	@Prop file_upload_after upload 실행 후에 실행.
@@ -116,29 +119,22 @@ SFM.prototype.setConfig({
 			fileArea.addEventListener('dragleave', FileDragHover, false);
 		},
 		file_upload_before: function () {
-			console.log('uploadStart');
 		},
 		file_upload_after: function (param) {
 			// param.response 업로드 요청에 대해 받은 응답 객체
-			console.log('uploadEnd');
 		},
 		file_remove_before: function (param) {
 			// param.file 삭제될 파일
 			// param.item 삭제되는 파일의 폼
-			console.log('removeStart');
 		},
 		file_remove_after: function (param) {
 			// param.response 삭제 요청에 대해 받은 응답 객체
-			console.log('removeEnd');
 		},
 		file_download_before: function (param) {
 			// param.file 다운로드될 파일
 			// param.item 다운로드되는 파일의 폼
-			console.log('downloadStart');
 		},
 		file_download_after: function () {
-			console.log('downloadEnd');
 		}	
 	}
 });
-
