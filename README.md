@@ -2,6 +2,8 @@
 
 ##### 테이블 구조와 CSS의 의존성을 제거한 파일 업로드 모듈을 만들어 보고 싶어 개발.
 
+*configuration은 default_config.js 에서 확인*
+
 ```
 @DTO
 import java.util.List;
