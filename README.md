@@ -4,14 +4,14 @@
 
 *configuration은 default_config.js 에서 확인*
 
-```
+```java
 @DTO
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
-		
-public class FileDTO {
 
-	private int fileIdx; //속성 key에 설정한 키값들을 추가
+public class FileDTO {
+	// config or option의 key에 설정한 키와 동일한 변수명이어야 함
+	private int fileIdx;
 	private String fileSeq;
 	private MultipartFile file; //속성 file_parameter_name의 설정값과 동일해야 함
 	private List<FileDTO> files; //속성 file_list_parameter_name의 설정값과 동일해야 함
@@ -43,19 +43,19 @@ public class FileDTO {
 }
 ```
 
- ```		javascript
+ ```javascript
 @html
 	<div id='dropzone'></div>
 @script 
 	// setConfig에서 설정한 공통 속성 중 따로 사용하고 싶을 때 option 객체 설정
 	var dropzone = new SFM({
-	id: 'dropzone'  //필수
+	id: 'dropzone', // 필수
 	url: {
 		file_get_list: '/test/getFileList.sample'
-	}
+	},
 	event: {
-		file_upload: 'click''
-	}
+		file_upload: 'click
+	},
 	...
  });
 ```
