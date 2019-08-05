@@ -2,46 +2,7 @@
 
 ##### 테이블 구조와 CSS의 의존성을 제거한 파일 업로드 모듈을 만들어 보고 싶어 개발.
 
-*configuration은 default_config.js 에서 확인*
-
-```java
-@DTO
-import java.util.List;
-import org.springframework.web.multipart.MultipartFile;
-
-public class FileDTO {
-	// config or option의 key에 설정한 키와 동일한 변수명이어야 함
-	private int fileIdx;
-	private String fileSeq;
-	private MultipartFile file; //속성 file_parameter_name의 설정값과 동일해야 함
-	private List<FileDTO> files; //속성 file_list_parameter_name의 설정값과 동일해야 함
-	
-	public int getFileIdx() {
-		return fileIdx;
-	}
-	public void setFileIdx(int fileIdx) {
-		this.fileIdx = fileIdx;
-	}
-	public String getFileSeq() {
-		return fileSeq;
-	}
-	public void setFileSeq(String fileSeq) {
-		this.fileSeq = fileSeq;
-	}
-	public MultipartFile getFile() {
-		return file;
-	}
-	public void setFile(MultipartFile file) {
-		this.file = file;
-	}
-	public List<FileDTO> getFiles() {
-		return files;
-	}
-	public void setFiles(List<FileDTO> files) {
-		this.files = files;
-	}
-}
-```
+*configuration 및 자세한 사용법은 sfm_usage.js 에서 확인*
 
  ```javascript
 @html
