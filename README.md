@@ -59,3 +59,13 @@ public class FileDTO {
 	...
  });
 ```
+
+ ```javascript
+@script 
+	// 생성자 파라미터 설정
+	var dropzone = new SFMGrid({
+	rowIdColumn: '_$uid', // 필수
+	listParameterName: 'files' // 필수
+	fileParameterName: 'file' // default: 'file'
+ });
+```
