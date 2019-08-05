@@ -13,7 +13,9 @@
 	if(typeof module === 'object' && typeof module.exports === 'object'){
 		module.exports = factory;
 	}else{
-		this['SFM'] = factory;
+		for(var key in factory){
+			this[key] = factory[key];
+		}
 	}
 }((function (DoublyLinkedHashMap, Promise) { 'use strict'
 	
@@ -50,7 +52,7 @@
 	 * SFM 공유 속성
 	 */
  	SimpleFileManager.prototype.config = {
-		key: { fileIdx: 'number', fileSeq: 'number' }, 
+		key: { fileIdx: 'number', fileSeq: 'string' }, 
 		fix: { 
 	  	item: 'item', 
 			item_key_area:'item-key-area', 
@@ -63,13 +65,14 @@
 		file: {
 			file_size: '52428800',
 			file_count: 0,
-		  	file_extension: [],
-		  	file_extension_except: [],
-	  		file_parameter_name: 'file',
-	  		file_list_parameter_name: 'files',
+	  	file_extension: [],
+	  	file_extension_except: [],
+  		file_parameter_name: 'file',
+  		file_list_parameter_name: 'files',
 		},
 		message: {
 			file_remove: '삭제하시겠습니까?',
+			file_already_exist: '동일한 이름의 파일이 이미 등록되어 있습니다',
 			file_size_max_overflow: '허용된 크기(50mb)보다 용량이 큰 파일입니다',
 			file_count_over: '허용된 개수를 초과합니다',
 			file_extension: '허용된 확장자가 아닙니다.',
@@ -222,10 +225,11 @@
 	}
 	
 	SimpleFileManager.prototype.makeCallee = function () {
-		this.callee.getFiles = this.getFiles.bind(this);
+		this.callee.getFilesFromUrl = this.getFilesFromUrl.bind(this);
 		this.callee.uploadFile = this.uploadFile.bind(this);
 		this.callee.getNewFiles = this.getNewFiles.bind(this);
 		this.callee.getFileToFormData = this.getFileToFormData.bind(this);
+		this.callee.getNewFileToFormData = this.getNewFileToFormData.bind(this);
 	}
 
 	/*
@@ -294,7 +298,7 @@
 		var files = e.target.files || e.dataTransfer.files;
 	
 		for(var i=0, f; f=files[i]; i++){
-			if(!this.fileValidator(f)){
+			if( !this.addFileStopValidator(f) ){
 				return;
 			}
 			var key = this.makeItemKey(f.name);
@@ -306,14 +310,20 @@
 	}
 	
 	//새 파일을 추가할 때 파일의 유효성 검사
-	SimpleFileManager.prototype.fileValidator = function (f) {
+	SimpleFileManager.prototype.addFileStopValidator = function (f) {
 		var k = f.name;
 		var extension = k.substring( k.lastIndexOf('.')+1, k.length );
 		var permitExtensions = this.getConfig('file', 'file_extension');
 		var exceptExtensions = this.getConfig('file', 'file_extension_except');
 		var fileCount = this.getConfig('file', 'file_count');
 		
-		//추가할 파일의 크기와 파일사이즈 속성값 비교
+		//동일한 이름의 파일이 이미 등록되어 있는지 체크
+		if( this.fileMap.isContainsKey(f.name) ){
+			alert(this.getConfig('message', 'file_already_exist'));
+			return false;
+		}
+		
+		//추가할 파일의 크기와 파일크기제한 속성값 비교
 		if( f.size > this.getConfig('file', 'file_size') ){
 			alert(this.getConfig('message', 'file_size_max_overflow'));
 			return false;
@@ -343,21 +353,27 @@
 	
 	/*
 	 * 파일객체를 Blob객체로 새로이 생성 (파일 객체의 name속성은 불변 속성이므로 변경하기 위함)
+	 * Blob 객체를 서버쪽에서 multipartfile 객체로 받을 때 originalfilename으로 파일명을 가져올 수 없음.
+	 * 따라서 중복된 파일명을 가진 파일 등록 시 [makeItemKey] 함수를 통해 새로운 파일명을 부여하는 대신 올리지 못하도록 변경.
 	 */ 
 	SimpleFileManager.prototype.createNewFile = function (f, key) {
-		var blob = new Blob([f], { type: f.type });
+/*  	
+    var blob = new Blob([f], { type: f.type });
 
 		blob.name = key;
 		blob.lastModified = f.lastModified || 0;
 		blob.lastModifiedDate = f.lastModifiedDate || 0;
-		
+
 		return blob;
+ */
+		return f;
 	}
 	
 	//동일한 파일명이 존재할 때 (2), (3), (4).....를 붙임
 	SimpleFileManager.prototype.makeItemKey = function (k) {
-		var suffix = 1;
 		var key = k;
+/*
+ 		var suffix = 1;
 		var name = null;
 		var extension = null;
 		
@@ -367,7 +383,7 @@
 			name = k.substring( 0, k.lastIndexOf('.') );
 			key = name + ' (' + suffix + ')' + extension;
 		}
-		
+ */
 		return key;
 	}
 	
@@ -520,7 +536,7 @@
 		});
 	}
 	
-	SimpleFileManager.prototype.uploadFile = function (e) {
+	SimpleFileManager.prototype.uploadFile = function () {
 		if(this.isIngUpload){
 			alert(this.getConfig('message', 'file_upload_is_ing'));
 			return false;
@@ -577,12 +593,13 @@
 	/**
 	 * 파일 배열의 파라미터 만들기
 	 */
-	SimpleFileManager.prototype.makeParamFiles = function (formData) {
+	SimpleFileManager.prototype.makeParamFiles = function (formData, isNewFile) {
 		var formData = ( formData ) ? formData : new FormData();
 		var files = this.fileMap.array();
+		isNewFile = ( isNewFile ) ? isNewFile : false; 
 		
 		files.forEach(function (file, i) {
-			this.setParamFormData(formData, file, true, i);
+			this.setParamFormData(formData, file, true, i, isNewFile);
 		}.bind(this));
 		
 		return formData;
@@ -595,7 +612,7 @@
 	 * @param isParamTypeList 파라미터가 List인지 여부
 	 * @param index 파라미터가 List형식일 때 현재 index
 	 */
-	SimpleFileManager.prototype.setParamFormData = function (formData, f, isParamTypeList, index) {
+	SimpleFileManager.prototype.setParamFormData = function (formData, f, isParamTypeList, index, isOnlyNewFile) {
 		var itemId = this.addSeparator(this.elementId.item, f.name);
 		var keyAreaElementNodes = this.getElement(itemId).querySelector('[' + this.elementId.itemKeyArea + ']').childNodes;
 		var keys = this.getConfig('key');
@@ -603,33 +620,35 @@
 		var i;
 		
 		//파일 키값 세팅
-		for(i=0, el; el=keyAreaElementNodes[i]; i++){
-			if(__hasProp.call(keys, el.id)){
-				formData.append(
-					this.getParamName(isParamTypeList, false, index, el.id),
-					( keys[el.id].toLowerCase() === 'number' ) ? Number(el.value) : String(el.value)
-				);
-			}
-		};
-		
-		//파일 세팅
-		formData.append( 
-			this.getParamName(isParamTypeList, true, index),
-			f
-		);
+		if( !isOnlyNewFile || ( isOnlyNewFile && f.isNewFile ) ){
+			for(i=0, el; el=keyAreaElementNodes[i]; i++){
+				if(__hasProp.call(keys, el.id)){
+					formData.append(
+						this.getParamName(isParamTypeList, false, index, el.id),
+						( keys[el.id].toLowerCase() === 'number' ) ? Number(el.value) : String(el.value)
+					);
+				}
+			};
+			
+			//파일 세팅
+			formData.append( 
+				this.getParamName(isParamTypeList, true, index),
+				f
+			);
+		}
 	}
-	
+		
 	SimpleFileManager.prototype.getParamName = function (isParamTypeList, isParamTypeFile, index, name) {
 		var fileListParamName = this.getConfig('file', 'file_list_parameter_name') + '[' + index +  '].';
 		var fileParamName = this.getConfig('file', 'file_parameter_name');
 		// 파라미터 타입이 리스트라면
 		if(isParamTypeList){
-			// 파라미턱 타입이 파일인지
+			// 파라미터 타입이 파일인지
 			return ( isParamTypeFile ) ? fileListParamName + fileParamName : fileListParamName + name;
 		}
 		// 파라미터 타입이 단건이라면
 		else {
-			// 파라미턱 타입이 파일인지
+			// 파라미터 타입이 파일인지
 			return ( isParamTypeFile ) ? fileParamName : name;
 		}
 	}
@@ -638,7 +657,11 @@
 		return this.makeParamFiles(formData);
 	}
 	
-	SimpleFileManager.prototype.getFiles = function (data) {
+	SimpleFileManager.prototype.getNewFileToFormData = function (formData) {
+		return this.makeParamFiles(formData, true);
+	}
+	
+	SimpleFileManager.prototype.getFilesFromUrl = function (data) {
 		var fileGetListUrl = this.getConfig('url', 'file_get_list'); 
 		var _this = this;
 		try {
@@ -646,15 +669,25 @@
 				_this.addFile(files);
 			});
 		} catch(error) {
-			console.error('[SFM] getFiles:', fileGetListUrl, error);
+			console.error('[SFM] getFilesFromUrl:', fileGetListUrl, error);
 			alert(_this.getConfig('message', 'file_get_error'));
 		}
 	}
 	
+	SimpleFileManager.prototype.getFiles = function () {
+		var files = [];
+		this.fileMap.each(function (item, i) {
+			files.push(item.value);
+		});
+		return files;
+	}
+	
 	SimpleFileManager.prototype.getNewFiles = function () {
 		var newFiles = [];
-		this.fileMap.each(function (i, item) {
-			newFiles.push(item.value);
+		this.fileMap.each(function (item, i) {
+			if( item.value.isNewFile ){
+				newFiles.push(item.value);
+			}
 		});
 		return newFiles;
 	}
@@ -759,8 +792,118 @@
 			xhr.send(formData);
 		}
 	}
+	
 
-	return SimpleFileManager;
+	/**
+	 * @Desc auigrid용 SFM ( rowId : file )
+	 */
+	var SimpleFileManagerForGrid = function (option) {
+		if( !(this instanceof SimpleFileManagerForGrid) ){
+  		throw new SyntaxError('[SFMGrid] "new" constructor operator is required');
+  	}
+  	
+		this.requiredValidator(option);
+  	this.fileMap = Object.create(null);
+  	this.rowIdColumn = option.rowIdColumn;
+  	this.listParameterName = option.listParameterName;
+  	this.fileParameterName = option.fileParameterName || 'file';
+  	this.callee = {};
+  	
+  	this.init();
+  	
+  	return this.callee;
+	}
+	
+	SimpleFileManagerForGrid.prototype.requiredValidator = function  (option) {
+		if( option == null || !__hasProp.call(option, 'rowIdColumn') ){
+			throw new SyntaxError('[SFMGrid] constructor property "rowIdColumn" is required');
+		}
+		if( !__hasProp.call(option, 'listParameterName') ){
+			throw new SyntaxError('[SFMGrid] constructor property "listParameterName" is required');
+		}
+		if( !__hasProp.call(option, 'fileParameterName') ){
+			console.warn('[SFMGrid] constructor property "fileParameterName" is not define');
+		}
+	}
+	
+	SimpleFileManagerForGrid.prototype.init = function () {
+		this.makeCallee();
+	}
+	
+	SimpleFileManagerForGrid.prototype.makeCallee = function () {
+		this.callee.get = this.get.bind(this);
+		this.callee.set = this.set.bind(this);
+		this.callee.remove = this.remove.bind(this);
+		this.callee.clear = this.clear.bind(this);
+		this.callee.getFormDataFromObject = this.getFormDataFromObject.bind(this);
+		this.callee.getFormDataFromArray = this.getFormDataFromArray.bind(this);
+	}
+
+	SimpleFileManagerForGrid.prototype.get = function (item) {
+		return this.fileMap[ item[this.rowIdColumn] ];
+	}
+	
+	SimpleFileManagerForGrid.prototype.set = function (item, file) {
+		this.fileMap[ item[this.rowIdColumn] ] = file;
+	}
+
+	SimpleFileManagerForGrid.prototype.remove = function (item) {
+		delete this.fileMap[ item[this.rowIdColumn] ];
+	}
+	
+	SimpleFileManagerForGrid.prototype.clear = function (key) {
+		this.fileMap.clear();
+	}
+	
+	SimpleFileManagerForGrid.prototype.getFormDataFromObject = function (gridRowItem) {
+		var formData = new FormData();
+		for(var k in this.fileMap){
+			if( this.rowIdColumn === k && __hasProp.call(this.fileMap, this.fileMap[this.rowIdColumn]) ){
+				formData.append( 	this.fileParameterName, this.fileMap[ this.fileMap[this.rowIdColumn] ] );
+			}
+			formData.append( k, this.fileMap[k] );
+		}
+		return formData;
+	}
+	
+	SimpleFileManagerForGrid.prototype.getFormDataFromArray = function (gridData) {
+		if( gridData.length == 0 ){
+			return null;
+		}
+		var _this = this;
+		var formData = new FormData();
+		var compareFileMap = this.copyObject(this.fileMap);
+		
+		gridData.forEach(function (row, i) {
+			for(var k in row){
+				if( _this.rowIdColumn === k && 	__hasProp.call(compareFileMap, row[_this.rowIdColumn]) ){
+					formData.append(
+						_this.listParameterName + '[' + i + '].' + _this.fileParameterName, 
+						compareFileMap[ row[_this.rowIdColumn] ]
+					);
+					delete compareFileMap[ row[_this.rowIdColumn] ];
+				}
+				formData.append(
+					_this.listParameterName + '[' + i + '].' + k, 
+					row[k]
+				);
+			}
+		});
+		return formData;
+	}
+	
+	SimpleFileManagerForGrid.prototype.copyObject = function (obj) {
+		var newObj = {};
+		for(var k  in obj){
+			newObj[k] = obj[k];
+		}
+		return newObj;
+	}
+	
+	return {
+		SFM: SimpleFileManager,
+		SFMGrid: SimpleFileManagerForGrid,
+	}
 	
 }((function () { 'use strict' //DoublyLinkedHashMap
 	
@@ -812,7 +955,7 @@
 	DoublyLinkedHashMap.prototype.getItemByKey = function (k) {
 		var result = null;
 		
-		this.each(function (i, item) {
+		this.each(function (item, i) {
 			if(k === item.key){
 				result = { 
 					index: i, 
@@ -833,7 +976,7 @@
 	DoublyLinkedHashMap.prototype.	getItemByIndex = function (index) {
 		var result = null;
 		
-		this.each(function (i, item) {
+		this.each(function (item, i) {
 			if(index == i){
 				result = { 
 					index: i, 
@@ -937,7 +1080,7 @@
 				value: item.value,
 			};
 			
-			if( callBack(i, param) === false ){
+			if( callBack(param, i) === false ){
 				break;
 			}
 			
@@ -962,7 +1105,7 @@
 					value: item.value,
 			};
 			
-			if( callBack(i, param)  === false ){
+			if( callBack(param, i)  === false ){
 				break;
 			}
 			
@@ -978,7 +1121,7 @@
 	DoublyLinkedHashMap.prototype.array = function(){
 		var array = [];
 		
-		this.each(function (i, item) {
+		this.each(function (item, i) {
 			array.push(item.value);
 		});
 		
@@ -991,7 +1134,7 @@
 	DoublyLinkedHashMap.prototype.	arrayRvs = function(){
 		var array = [];
 		
-		this.reverseEach(function (i, item) {
+		this.reverseEach(function (item, i) {
 			array.push(item.value);
 		});
 		
