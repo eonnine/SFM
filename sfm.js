@@ -621,7 +621,8 @@
 		
 		//파일 키값 세팅
 		if( !isOnlyNewFile || ( isOnlyNewFile && f.isNewFile ) ){
-			for(i=0, el; el=keyAreaElementNodes[i]; i++){
+			for(i=0; i<keyAreaElementNodes.length; i++){
+				el = keyAreaElementNodes[i];
 				if(__hasProp.call(keys, el.id)){
 					formData.append(
 						this.getParamName(isParamTypeList, false, index, el.id),
@@ -795,7 +796,7 @@
 	
 
 	/**
-	 * @Desc auigrid용 SFM ( rowId : file )
+	 * @Desc Grid용 SFM, row : file (1:1) 구조
 	 */
 	var SimpleFileManagerForGrid = function (option) {
 		if( !(this instanceof SimpleFileManagerForGrid) ){
