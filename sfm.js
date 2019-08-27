@@ -174,14 +174,15 @@
  	 * SFM 공유 속성을 임의로 지정할 수 있는 함수
  	 */
 	SimpleFileManager.prototype.setConfig = function (props) {
-			this.initConfig( props, [] );
+			this.initConfig( props );
 	}
 	
 	/**
 	 * props로 받은 값들로 SFM config 속성들을 수정
 	 */
 	SimpleFileManager.prototype.initConfig = function (props, target) {
-		target = ( target == null ) ? this.config : target;
+		target = ( target ) ? target : this.config;
+		
 		for(var key in props){
 			if( key === 'fix' ){
 				continue;

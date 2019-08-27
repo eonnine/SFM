@@ -112,7 +112,7 @@ var newFileFormData = simpleFileManger.getNewFileToFormData();
  *  변경하고자 할 때는 반드시 변경할 속성만 선언하세요.
  *  아무 설정도 하지 않았을 때, 아래와 같은 설정값으로 초기화됩니다.
  */
-window.SFM.prototype.setConfig({
+SFM.prototype.setConfig({
 	//파일 table 구조에 맞게 선언. { 테이블 컬럼명: 타입[string, number], ... }
 	//타입에 따라 서버로 전송되는 기본값이 달라짐. string => '', number => 0
 	key: { fileIdx: 'number', fileSeq: 'number' }, 
