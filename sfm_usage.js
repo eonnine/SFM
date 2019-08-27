@@ -89,9 +89,9 @@ simpleFileManger.uploadFile();
 simpleFileManger.getNewFiles(); 
 
 /*
- * 인자로 넘긴 formData객체에 등록되어 있는 파일들을 추가한 뒤 반환합니다.
+ * 등록되어 있는 파일들을 인자로 넘긴 formData객체에 추가한 뒤 반환합니다.
  * 인자로 formData를 넘기지 않는다면 파일 목록이 담긴 새 formData를 반환합니다.
- * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 바인딩됩니다.
+ * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 매핑됩니다.
  */ 
 var formData = new FormData();
 formData = simpleFileManger.getFileToFormData(formData); 
@@ -99,7 +99,7 @@ formData = simpleFileManger.getFileToFormData(formData);
 /*
  * 인자로 넘긴 formData객체에 새로 등록된 파일들만 추가한 뒤 반환합니다.
  * 인자로 formData를 넘기지 않는다면 파일 목록이 담긴 새 formData를 반환합니다.
- * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 바인딩됩니다.
+ * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 매핑됩니다.
  */ 
 var newFileFormData = simpleFileManger.getNewFileToFormData();
 
@@ -296,14 +296,14 @@ simpleFileMangerForGrid.clear();
 
 /*
  * 인자로 넘긴 그리드 데이터 객체와 저장되어있는 파일을 키값으로 매칭하여 formData 형식으로 변환합니다.
- * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 바인딩됩니다.
+ * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 매핑됩니다.
  */
 var gridItem = 'AUIGrid의 경우 한 row의 item 객체';
 var formData = simpleFileMangerForGrid.getFormDataFromObject(gridItem); 
 
 /*
  * 인자로 넘긴 그리드 데이터 배열과 저장되어있는 파일들을 키값으로 매칭하여 formData 형식으로 변환합니다.
- * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 바인딩됩니다.
+ * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 매핑됩니다.
  */ 
 var gridDataArray = 'AUIGrid의 경우 row item의 배열 ex) AUIGrid.getGridData() 함수의 반환값';
 var formData = simpleFileMangerForGrid.getFormDataFromArray(gridDataArray);
