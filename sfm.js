@@ -2,17 +2,17 @@
  * ******************
  * Simple File Manager *
  * ******************
- * Develope by Eg 2019-03-25
+ * Developed by Eg 2019-03-25
  */
 (function (factory) {
-	if(typeof define === 'function' && define.amd !== undefined){
+	if(typeof define === 'function' && define.amd ){
 		define(function(){
 			return factory;
 		});
-	}
+	} else
 	if(typeof module === 'object' && typeof module.exports === 'object'){
 		module.exports = factory;
-	}else{
+	} else {
 		for(var key in factory){
 			this[key] = factory[key];
 		}
@@ -26,12 +26,21 @@
   		throw new SyntaxError('[SFM] "new" constructor operator is required');
   	}
   	this.requiredValidator(option);
-  	
+  	/**
+  	 * 파일 데이터가 이 곳에 저장됩니다.
+  	 */
   	this.fileMap = new DoublyLinkedHashMap();
+  	/**
+  	 * 다중 이벤트 방지 플래그 변수
+  	 * upload, download, remove가 진행되고 있을 때 연달아 시작되지 않도록 제어합니다. 
+  	 */
   	this.isIngUpload = false;
   	this.isIngDownload = false;
   	this.isIngRemove = false;
   	this.option = option;
+  	/**
+  	 * SFM 객체가 반환할 객체
+  	 */
   	this.callee = {};
   	
   	this.init(option);
@@ -50,6 +59,8 @@
 	
 	/**
 	 * SFM 공유 속성
+	 * setConfig 함수를 이용하여 초기 설정이 가능합니다.
+	 * SFM 객체를 생성할 때 생성자 옵션을 이용하여 객체 별로 따로 적용도 가능합니다.
 	 */
  	SimpleFileManager.prototype.config = {
 		key: { fileIdx: 'number', fileSeq: 'string' }, 
@@ -200,7 +211,9 @@
 		return document.getElementById(id);
 	}
 	
-	//SFM가 생성될 때 내부적으로 사용할 id값 생성
+	/**
+	 * SFM가 생성될 때 내부적으로 사용할 id값 생성
+	 */
 	SimpleFileManager.prototype.makeElementId = function (option) {
 		this.elementId = {};
 		this.elementId.item = this.makeConfigId('fix', 'item');
@@ -225,6 +238,9 @@
 		return result.slice(0, -1);
 	}
 	
+	/**
+	 * SFM 객체 생성 시 반환할 객체를 설정합니다.
+	 */
 	SimpleFileManager.prototype.makeCallee = function () {
 		this.callee.getFilesFromUrl = this.getFilesFromUrl.bind(this);
 		this.callee.uploadFile = this.uploadFile.bind(this);
@@ -234,7 +250,7 @@
 	}
 
 	/*
-	 * 생성된 이후의 SFM 객체의 속성이나 옵션은 변경 불가능하도록 설정
+	 * 생성된 이후의 SFM 객체의 속성이나 옵션은 변경 불가능하도록 설정합니다.
 	 */
 	SimpleFileManager.prototype.freezeProperty = function () {
 		Object.freeze(this.callee);
@@ -246,9 +262,12 @@
 		});
 	}
 	
+	/**
+	 * SFM 객체 초기화
+	 */
 	SimpleFileManager.prototype.init = function (option) {
 		this.makeElementId(); // SFM 객체에서 사용할 요소 ID 초기화
-		this.createLayout();
+		this.createLayout(); // config.layout에 정의된 레이아웃을 렌더링합니다.
 		this.createDefaultEventListener(); // SFM 기본 이벤트 설정 (드래그 앤 드랍)
 		this.makeCallee(); // SFM 객체가 반환해줄 변수 초기화
 		this.freezeProperty();
@@ -266,6 +285,7 @@
 		var fileUploadElement = this.getElement(fileUploadId);
 		
 		if(fileUploadElement != null){
+			// config.layout함수에서 fileUploadId가 부여된 요소가 있다면 해당 요소에 uploadFile 이벤트 리스너를 선언합니다.
 			this.addCustomEvent(fileUploadElement, this.getConfig('event', 'file_upload'), this.uploadFile.bind(this));
 		}
 		this.callConfigEventHandler('layout_create_after', { fileArea: fileArea, fileUploadElement: fileUploadElement });
@@ -370,7 +390,9 @@
 		return f;
 	}
 	
-	//동일한 파일명이 존재할 때 (2), (3), (4).....를 붙임
+	/**
+	 * 동일한 파일명이 존재할 때 (2), (3), (4).....를 붙임
+	 */
 	SimpleFileManager.prototype.makeItemKey = function (k) {
 		var key = k;
 /*
@@ -434,6 +456,7 @@
 		var fileDownloadElement = this.getElement(fileDownloadId);
 		
 		if( fileRemoveElement ){
+			// config.item에서 정의한 함수에서 fileRemoveId가 부여된 요소가 있다면 해당 요소에 removeFile 이벤트 리스너를 선언합니다.
 			this.addCustomEvent(
 				fileRemoveElement, 
 				this.getConfig('event', 'file_remove'), 
@@ -441,6 +464,7 @@
 			);
 		}
 				
+		// config.item에서 정의한 함수에서 fileDownloadId가 부여된 요소가 있다면 해당 요소에 removeFile 이벤트 리스너 선언를 선언합니다.
 		if( fileDownloadElement ){
 			this.addCustomEvent(
 				fileDownloadElement, 
@@ -640,6 +664,10 @@
 		}
 	}
 		
+	/**
+	 * 서버의 DTO와 매핑할 FormData의 키값을 가져옵니다.
+	 * DTO와 매핑할 파라미터의 타입이 파일 객체 배열인지 파일 객체인지에 따라 구분하여 반환합니다. 
+	 */
 	SimpleFileManager.prototype.getParamName = function (isParamTypeList, isParamTypeFile, index, name) {
 		var fileListParamName = this.getConfig('file', 'file_list_parameter_name') + '[' + index +  '].';
 		var fileParamName = this.getConfig('file', 'file_parameter_name');
@@ -655,14 +683,27 @@
 		}
 	}
 	
+	/*
+	 * 등록되어 있는 파일들을 인자로 넘긴 formData객체에 추가한 뒤 반환합니다.
+	 * 인자로 formData를 넘기지 않는다면 파일 목록이 담긴 새 formData를 반환합니다.
+	 * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 매핑됩니다.
+	 */ 
 	SimpleFileManager.prototype.getFileToFormData = function (formData) {
 		return this.makeParamFiles(formData);
 	}
 	
+	/*
+	 * 인자로 넘긴 formData객체에 새로 등록된 파일들만 추가한 뒤 반환합니다.
+	 * 인자로 formData를 넘기지 않는다면 파일 목록이 담긴 새 formData를 반환합니다.
+	 * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 매핑됩니다.
+	 */ 
 	SimpleFileManager.prototype.getNewFileToFormData = function (formData) {
 		return this.makeParamFiles(formData, true);
 	}
 	
+	/*
+	 * props.url.file_get_list 에 정의한 url에서 파일목록을 가져옵니다.
+	 */ 
 	SimpleFileManager.prototype.getFilesFromUrl = function (data) {
 		var fileGetListUrl = this.getConfig('url', 'file_get_list'); 
 		var _this = this;
@@ -675,7 +716,10 @@
 			alert(_this.getConfig('message', 'file_get_error'));
 		}
 	}
-	
+
+	/*
+	 * 현재 등록되어 있는 전체 파일목록을 가져옵니다.
+	 */
 	SimpleFileManager.prototype.getFiles = function () {
 		var files = [];
 		this.fileMap.each(function (item, i) {
@@ -684,6 +728,9 @@
 		return files;
 	}
 	
+	/*
+	 * 현재 등록되어 있는 파일들 중 새로 등록된 파일들의 목록만 가져옵니다.
+	 */ 
 	SimpleFileManager.prototype.getNewFiles = function () {
 		var newFiles = [];
 		this.fileMap.each(function (item, i) {
@@ -857,6 +904,11 @@
 		this.fileMap.clear();
 	}
 	
+	/**
+	 * 인자로 넘긴 그리드 데이터 객체와 저장되어있는 파일을 키값으로 매칭하여 formData 형식으로 변환합니다.
+	 * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 매핑됩니다.
+	 * @param gridItem 'AUIGrid의 경우 한 row의 item 객체'
+	 */
 	SimpleFileManagerForGrid.prototype.getFormDataFromObject = function (gridRowItem) {
 		var formData = new FormData();
 		for(var k in this.fileMap){
@@ -868,6 +920,11 @@
 		return formData;
 	}
 	
+	/**
+	 * 인자로 넘긴 그리드 데이터 배열과 저장되어있는 파일들을 키값으로 매칭하여 formData 형식으로 변환합니다.
+	 * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 매핑됩니다.
+	 * @param gridDataArray 'AUIGrid의 경우 row item의 배열 ex) AUIGrid.getGridData() 함수의 반환값'
+	 */ 
 	SimpleFileManagerForGrid.prototype.getFormDataFromArray = function (gridData) {
 		if( gridData.length == 0 ){
 			return null;
