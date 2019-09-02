@@ -152,6 +152,11 @@ SFM.prototype.setConfig({
 	 * @Param fileUploadId file upload 이벤트를 실행할 요소에 주는 ID
 	 */
 	layout: function (fileAreaId, fileUploadId) {
+		/*
+		 * fileAreaId가 부여된 요소를 layout 객체로 인식하고 그 내부의 요소는 기본 메세지로 간주합니다.
+		 * 파일매니저의 파일 목록이 없을 때 최초 파일이 추가되면 기본 메세지 요소는 비워집니다.
+		 * 반대로 파일 삭제 후 남은 파일 목록이 없다면 기본 메세지 요소가 다시 나타납니다. 
+		 */ 
 		return '<fieldset><button id="'+fileUploadId+'" style="float:right; position:relative; bottom:13px;">upload</button><div id="'+fileAreaId+'" style="z-index:1;" width="100%" height="100%" default-class-dropzone><p dropzone-file-area-message></p></div></fieldset>';
 	},
 	/**

@@ -18,6 +18,7 @@ SFM.prototype.setConfig({
 		file_list_parameter_name: 'files',
 	},
 	message: {
+		file_default: '파일을 여기에 드래그하거나 클릭하세요',
 		file_remove: '삭제하시겠습니까?',
 		file_already_exist: '동일한 이름의 파일이 이미 등록되어 있습니다',
 		file_size_max_overflow: '허용된 크기(50mb)보다 용량이 큰 파일입니다',
@@ -33,7 +34,7 @@ SFM.prototype.setConfig({
 		file_download_is_ing: '다운로드 중입니다',
 	},
 	layout: function (fileAreaId, fileUploadId) {
-		return '<fieldset><div id="'+fileAreaId+'" style="z-index:1;" width="100%" height="100%" default-class-dropzone><p dropzone-file-area-message></p></div></fieldset>';
+		return '<fieldset><button id="'+fileUploadId+'" style="float:right; position:relative; bottom:13px;">upload</button><div id="'+fileAreaId+'" style="z-index:1;" width="100%" height="100%" default-class-dropzone><p>파일을 여기에 드래그하거나 클릭하세요</p></div></fieldset>';
 	},
 	item: function (file, fileRemoveId, fileDownloadId) {
 		return '<span style="z-index:10;"><p>&nbsp;&nbsp;<b id="'+fileDownloadId+'" style="width:12px; height:12px; margin-left:5px; font-size:12px; cursor:pointer;">▼</b>&nbsp;file: <strong>' + file.name + '</strong>&nbsp;&nbsp;&nbsp;type: <strong>' + file.type + '</strong>&nbsp;&nbsp;&nbsp;size: <strong>' + file.size + '</strong>bytes<data style="display:none;"></data><b style="width:12px; height:12px; margin-left:5px; font-size:12px; cursor:pointer;" id="'+fileRemoveId+'">X</b></p></span>';

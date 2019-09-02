@@ -37,6 +37,12 @@
   	this.isIngUpload = false;
   	this.isIngDownload = false;
   	this.isIngRemove = false;
+  	/**
+  	 * 정의한 layout에서 fileAreaId가 부여된 요소의 내부 요소들은 기본 메세지로 간주합니다.
+  	 * 최초 파일이 추가될 때 기본 메세지를 지우거나 파일 삭제 후 남은 파일이 없을 때 기본 메세지를 보여줍니다.
+  	 * 위 프로세스에서 임시로 기본 메세지를 저장하는 변수입니다. 
+  	 */
+  	this.fileAreaInnerHTML = '';
   	this.option = option;
   	/**
   	 * SFM 객체가 반환할 객체
@@ -97,7 +103,7 @@
 			file_download_is_ing: '다운로드 중입니다',
 		},
 		layout: function (fileAreaId, fileUploadId) {
-			return '<fieldset><button id="'+fileUploadId+'" style="float:right; position:relative; bottom:13px;">upload</button><div id="'+fileAreaId+'" style="z-index:1;" width="100%" height="100%" default-class-dropzone><p dropzone-file-area-message></p></div></fieldset>';
+			return '<fieldset><button id="'+fileUploadId+'" style="float:right; position:relative; bottom:13px;">upload</button><div id="'+fileAreaId+'" style="z-index:1;" width="100%" height="100%" default-class-dropzone><p>파일을 여기에 드래그하거나 클릭하세요</p></div></fieldset>';
 		},
 		item: function (file, fileRemoveId, fileDownloadId) {
 			return '<span style="z-index:10;"><p>&nbsp;&nbsp;<b id="'+fileDownloadId+'" style="width:12px; height:12px; margin-left:5px; font-size:12px; cursor:pointer;">▼</b>&nbsp;file: <strong>' + file.name + '</strong>&nbsp;&nbsp;&nbsp;type: <strong>' + file.type + '</strong>&nbsp;&nbsp;&nbsp;size: <strong>' + file.size + '</strong>bytes<data style="display:none;"></data><b style="width:12px; height:12px; margin-left:5px; font-size:12px; cursor:pointer;" id="'+fileRemoveId+'">X</b></p></span>';
@@ -324,6 +330,7 @@
 			}
 			var key = this.makeItemKey(f.name);
 			var newFile = this.createNewFile(f, key);
+			this.removeDefaultHTML();
 			this.addFileToFileMap(newFile, true);
 			this.addItem(newFile);
 		};
@@ -415,6 +422,7 @@
 			if( !__hasProp.call(f, 'name') ){
 				console.error('[SFM] not exists attribute "name" in file object', f);
 			} else {
+				this.removeDefaultHTML();
 				this.addFileToFileMap(f, false);
 				this.addItem(f);
 			}
@@ -425,6 +433,28 @@
 		f.isNewFile = isNewFile
 		this.fileMap.put(f.name, f);
 	}
+	
+	/**
+	 * 최초 파일 등록 시 fileArea( config.layout에서 fileAreaId가 부여된 요소 )의 내부 요소를 비우고 임시 저장합니다.
+	 */
+	SimpleFileManager.prototype.removeDefaultHTML = function () {
+		if( this.fileMap.length == 0 ){
+			var fileArea = this.getElement(this.elementId.fileArea);
+			this.fileAreaInnerHTML = fileArea.innerHTML; 
+			fileArea.innerHTML = '';
+		}
+	};
+	
+	/**
+	 * 삭제 후 남은 파일이 없다면 임시 저장해놓았던 fileArea의 내부 요소를 생성합니다. 
+	 */
+	SimpleFileManager.prototype.insertDefaultHTML = function () {
+		if( this.fileMap.length == 0 ){
+			var fileArea = this.getElement(this.elementId.fileArea);
+			fileArea.innerHTML = this.fileAreaInnerHTML; 
+			this.fileAreaInnerHTML = '';
+		}
+	};
 	
 	SimpleFileManager.prototype.addItem = function (f) {
 		var 	fileRemoveId = this.addSeparator(this.elementId.fileRemove, f.name)
@@ -521,6 +551,7 @@
 			_this.callConfigEventHandler('file_remove_after', { response: res });
 			
 			_this.isIngRemove  = false;
+			_this.insertDefaultHTML();
 		});
 	}
 	
