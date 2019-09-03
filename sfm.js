@@ -524,7 +524,8 @@
 		})
 		.then(function (resolve, reject) {
 			if(fileRemoveUrl == null || _this.trim(fileRemoveUrl) === ''){
-				fileRemoveUrl = location.href;
+				resolve();
+				return;
 			}
 			try {
 				_this.ajax.post(fileRemoveUrl, formData, function (res) {
@@ -565,17 +566,18 @@
 			}
 		})
 		.then(function (resolve, reject) {
-			if(downloadUrl != null && _this.trim(downloadUrl) !== ''){
-				try {
-					location.href = downloadUrl;
-					resolve();
-				} catch(error) {
-					console.error('[SFM] fail download file:', downloadUrl, error);
-					reject();
-					alert(_this.getConfig('message', 'file_download_error'));
-				}
-			} else {
+			if(downloadUrl == null || _this.trim(downloadUrl) == ''){
 				console.warn('[SFM] downloadURL is not define');
+				resolve();
+				return;
+			}
+			try {
+				location.href = downloadUrl;
+				resolve();
+			} catch(error) {
+				console.error('[SFM] fail download file:', downloadUrl, error);
+				reject();
+				alert(_this.getConfig('message', 'file_download_error'));
 			}
 		})
 		.then(function () {
@@ -606,7 +608,8 @@
 		})
 		.then(function (resolve, reject) {
 			if(fileUploadUrl == null || _this.trim(fileUploadUrl) === ''){
-				fileUploadUrl = location.href;
+				resolve();
+				return;
 			}
 			try {
 				_this.ajax.post(fileUploadUrl, formData, function (res) {
