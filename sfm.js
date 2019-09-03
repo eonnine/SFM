@@ -259,7 +259,18 @@
 	 * 생성된 이후의 SFM 객체의 속성이나 옵션은 변경 불가능하도록 설정합니다.
 	 */
 	SimpleFileManager.prototype.freezeProperty = function () {
-		Object.freeze(this.callee);
+		var descriptor = {
+			configurable: false,
+			enumerable: false,
+			writable: false
+		};
+		Object.defineProperties(this.callee, {
+			'getFilesFromUrl': descriptor,
+			'uploadFile': descriptor,
+			'getNewFiles': descriptor,
+			'getFileToFormData': descriptor,
+			'getNewFileToFormData': descriptor,
+		});
 		Object.defineProperties(this, {
 			'fileMap': { configurable: false, writable: false },
 			'isIngUpload': { configurable: false },
@@ -607,7 +618,7 @@
 			}
 		})
 		.then(function (resolve, reject) {
-			if(fileUploadUrl == null || _this.trim(fileUploadUrl) === ''){
+			if(fileUploadUrl == null || _this.trim(fileUploadUrl) === '' || _this.fileMap.length == 0){
 				resolve();
 				return;
 			}
@@ -817,13 +828,13 @@
 		/**
 		 * config 속성에 설정된 전역 이벤트핸들러 실행
 		 */
-		flag = this.searchProp(this.config, ['eventHandler', handlerName])( this.copyObject(param) );
+		flag = this.searchProp(this.config, ['eventHandler', handlerName]).call(this.callee, this.copyObject(param) );
 			
 		/*
 		 * SMF 생성자 옵션에 정의한 이벤트핸들러가 있다면 실행
 		 */
 		if( flag !== false && __hasProp.call(option, 'eventHandler') && __hasProp.call(option.eventHandler, handlerName) ){
-			flag = option.eventHandler[handlerName](this.copyObject(param));
+			flag = option.eventHandler[handlerName].call(this.callee, this.copyObject(param));
 		}
 			
 		return ( flag === false ) ? false : true;
