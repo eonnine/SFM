@@ -345,11 +345,11 @@
 		var exceptExtensions = this.getConfig('file', 'file_extension_except');
 		var fileCount = this.getConfig('file', 'file_count');
 		
-		//동일한 이름의 파일이 이미 등록되어 있는지 체크
-		if( this.fileMap.isContainsKey(f.name) ){
+		//동일한 이름의 파일이 이미 등록되어 있다면 등록 안함
+/*		if( this.fileMap.isContainsKey(f.name) ){
 			alert(this.getConfig('message', 'file_already_exist'));
 			return false;
-		}
+		}*/
 		
 		//추가할 파일의 크기와 파일크기제한 속성값 비교
 		if( f.size > this.getConfig('file', 'file_size') ){
@@ -381,20 +381,13 @@
 	
 	/*
 	 * 파일객체를 Blob객체로 새로이 생성 (파일 객체의 name속성은 불변 속성이므로 변경하기 위함)
-	 * Blob 객체를 서버쪽에서 multipartfile 객체로 받을 때 originalfilename으로 파일명을 가져올 수 없음.
-	 * 따라서 중복된 파일명을 가진 파일 등록 시 [makeItemKey] 함수를 통해 새로운 파일명을 부여하는 대신 올리지 못하도록 변경.
 	 */ 
 	SimpleFileManager.prototype.createNewFile = function (f, key) {
-/*  	
     var blob = new Blob([f], { type: f.type });
-
 		blob.name = key;
 		blob.lastModified = f.lastModified || 0;
 		blob.lastModifiedDate = f.lastModifiedDate || 0;
-
 		return blob;
- */
-		return f;
 	}
 	
 	/**
@@ -402,7 +395,6 @@
 	 */
 	SimpleFileManager.prototype.makeItemKey = function (k) {
 		var key = k;
-/*
  		var suffix = 1;
 		var name = null;
 		var extension = null;
@@ -413,7 +405,7 @@
 			name = k.substring( 0, k.lastIndexOf('.') );
 			key = name + ' (' + suffix + ')' + extension;
 		}
- */
+ 
 		return key;
 	}
 	
@@ -648,6 +640,7 @@
 	
 	/**
 	 * 파일 배열의 파라미터 만들기
+	 * @param isNewFile 새로 등록된 파일들만 formData에 추가할지 여부
 	 */
 	SimpleFileManager.prototype.makeParamFiles = function (formData, isNewFile) {
 		var formData = ( formData ) ? formData : new FormData();
@@ -667,6 +660,7 @@
 	 * @param f 파라미터로 보낼 파일
 	 * @param isParamTypeList 파라미터가 List인지 여부
 	 * @param index 파라미터가 List형식일 때 현재 index
+	 * @param isOnlyNewFile 새로 등록된 파일들만 formData에 추가할지 여부
 	 */
 	SimpleFileManager.prototype.setParamFormData = function (formData, f, isParamTypeList, index, isOnlyNewFile) {
 		var itemId = this.addSeparator(this.elementId.item, f.name);
@@ -675,7 +669,10 @@
 		var el;
 		var i;
 		
-		//파일 키값 세팅
+		/**
+		 * 
+		 * 파일 키값 세팅
+		 */
 		if( !isOnlyNewFile || ( isOnlyNewFile && f.isNewFile ) ){
 			for(i=0; i<keyAreaElementNodes.length; i++){
 				el = keyAreaElementNodes[i];
@@ -690,7 +687,12 @@
 			//파일 세팅
 			formData.append( 
 				this.getParamName(isParamTypeList, true, index),
-				f
+				f,
+				/**
+				 * Blob 객체일 때 파일명 설정, 서버에서 getOriginalFilename메서드로 가져올 수 있습니다. 
+				 * Blob 객체로 업로드할 때는 이렇게 파일명을 설정해주어야 합니다. (IE 10++) 
+				 */
+				f.name
 			);
 		}
 	}
