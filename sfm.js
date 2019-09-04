@@ -221,7 +221,7 @@
 	 * SFM가 생성될 때 내부적으로 사용할 id값 생성
 	 */
 	SimpleFileManager.prototype.makeElementId = function (option) {
-		this.elementId = {};
+		this.elementId = Object.create(null);
 		this.elementId.item = this.makeConfigId('fix', 'item');
 		this.elementId.fileArea = this.makeConfigId('fix', 'item_area');
 		this.elementId.fileUpload = this.makeConfigId('fix','file_upload');
@@ -790,7 +790,7 @@
 
 	SimpleFileManager.prototype.addCustomEvent = function (element, evtNm, fn) {
 		if( element._$sfmEventListeners === undefined  ){
-			element._$sfmEventListeners = {};
+			element._$sfmEventListeners = Object.create(null);
 		}
 		
 		element._$sfmEventListeners[evtNm] = function (e) {
@@ -850,7 +850,6 @@
 		if(typeof object === 'string'){
 			result = object;
 		} else {
-			result = {};
 			for(var k in object){
 				result[k] = object[k];
 			}
