@@ -141,24 +141,12 @@
 				fileArea.addEventListener('dragenter', FileDragHover, false);
 				fileArea.addEventListener('dragleave', FileDragHover, false);
 			},
-			file_upload_before: function (data) {
-				console.log('uploadStart');
-			},
-			file_upload_after: function (data) {
-				console.log('uploadEnd');
-			},
-			file_remove_before: function (param) {
-				console.log('removeStart');
-			},
-			file_remove_after: function (data) {
-				console.log('removeEnd');
-			},
-			file_download_before: function () {
-				console.log('downloadStart');
-			},
-			file_download_after: function (data) {
-				console.log('downloadEnd');
-			}	
+			file_upload_before: function (data) {},
+			file_upload_after: function (data) {},
+			file_remove_before: function (param) {},
+			file_remove_after: function (data) {},
+			file_download_before: function () {},
+			file_download_after: function (data) {}	
 		}
 	}
 	
