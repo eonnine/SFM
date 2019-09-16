@@ -10,15 +10,15 @@
 @script 
 	// setConfig에서 설정한 공통 속성 중 따로 사용하고 싶을 때 option 객체 설정
 	var dropzone = new SFM({
-	id: 'dropzone', // 필수
-	url: {
-		file_get_list: '/test/getFileList.sample'
-	},
-	event: {
-		file_upload: 'click
-	},
-	...
- });
+	  id: 'dropzone', // 필수
+	  url: {
+	    file_get_list: '/test/getFileList.sample'
+	  },
+	  event: {
+	    file_upload: 'click
+	  },
+	  ...
+    });
 ```
 
  ```javascript
