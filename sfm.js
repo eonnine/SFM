@@ -2,6 +2,7 @@
  * ******************
  * Simple File Manager *
  * ******************
+ * License: MIT
  * Developed by Eg 2019-03-25
  */
 (function (factory) {
