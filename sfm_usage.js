@@ -71,7 +71,7 @@ var simpleFileManger = new SFM({
 /*
  * props.url.file_get_list 에 정의한 url에서 파일목록을 가져옵니다.
  */ 
-simpleFileManger.getFilesFromUrl();
+simpleFileManger.addFilesFromUrl();
 
 /*
  * 현재 등록되어 있는 전체 파일목록을 가져옵니다.

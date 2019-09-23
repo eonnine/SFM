@@ -237,7 +237,9 @@
 	 * SFM 객체 생성 시 반환할 객체를 설정합니다.
 	 */
 	SimpleFileManager.prototype.makeCallee = function () {
-		this.callee.getFilesFromUrl = this.getFilesFromUrl.bind(this);
+		this.callee.addFiles = this.addFiles.bind(this);
+		this.callee.clear = this.clear.bind(this);
+		this.callee.addFilesFromUrl = this.addFilesFromUrl.bind(this);
 		this.callee.uploadFile = this.uploadFile.bind(this);
 		this.callee.getNewFiles = this.getNewFiles.bind(this);
 		this.callee.getFileToFormData = this.getFileToFormData.bind(this);
@@ -254,7 +256,7 @@
 			writable: false
 		};
 		Object.defineProperties(this.callee, {
-			'getFilesFromUrl': descriptor,
+			'addFilesFromUrl': descriptor,
 			'uploadFile': descriptor,
 			'getNewFiles': descriptor,
 			'getFileToFormData': descriptor,
@@ -287,8 +289,15 @@
 		self.innerHTML = this.getConfig('layout')(fileAreaId, fileUploadId);
 		self.insertAdjacentHTML('afterbegin', '<input type="file" id="' + this.elementId.fileInputElement + '" multiple="multiple" style="display:none;"/>');
 		
+		
 		var fileArea = this.getElement(fileAreaId);
 		var fileUploadElement = this.getElement(fileUploadId);
+		
+		/*
+		 * config.layout에 정의된 함수가 반환하는 html문자열에서 fileAreaId가 부여된 요소의 내부 요소를 기본 메시지 요소로 간주하고 저장합니다.
+		 * SFM에 등록된 파일이 하나도 없을 경우 여기서 기본 메세지로 저장된 요소가 나타나며 등록된 파일이 하나라도 있을 경우 사라집니다. 
+		 */ 
+		this.fileAreaInnerHTML = fileArea.innerHTML;
 		
 		if(fileUploadElement != null){
 			// config.layout함수에서 fileUploadId가 부여된 요소가 있다면 해당 요소에 uploadFile 이벤트 리스너를 선언합니다.
@@ -409,8 +418,12 @@
 		return key;
 	}
 	
-	SimpleFileManager.prototype.addFile = function (files) {
-		for(var i=0, f; f=files[f]; i++){
+	SimpleFileManager.prototype.addFiles = function (files) {
+		if( !Array.isArray(files) ){
+			throw new SyntaxError('[SFM] argument type of `addFiles` must be Array');
+		}
+		
+		for(var i=0, f; f=files[i]; i++){
 			if( !__hasProp.call(f, 'name') ){
 				console.error('[SFM] not exists attribute "name" in file object', f);
 			} else {
@@ -432,7 +445,6 @@
 	SimpleFileManager.prototype.removeDefaultHTML = function () {
 		if( this.fileMap.length == 0 ){
 			var fileArea = this.getElement(this.elementId.fileArea);
-			this.fileAreaInnerHTML = fileArea.innerHTML; 
 			fileArea.innerHTML = '';
 		}
 	};
@@ -444,7 +456,6 @@
 		if( this.fileMap.length == 0 ){
 			var fileArea = this.getElement(this.elementId.fileArea);
 			fileArea.innerHTML = this.fileAreaInnerHTML; 
-			this.fileAreaInnerHTML = '';
 		}
 	};
 	
@@ -514,6 +525,12 @@
 		var formData = _this.makeParamFile(f);
 		var fileRemoveUrl = _this.getConfig('url', 'file_remove');
 		
+		promise.error(function (error) {
+			console.error('[SFM] fail remove file:', fileRemoveUrl, error);
+			_this.isIngRemove  = false;
+			alert(_this.getConfig('message', 'file_remove_error'));
+		});
+		
 		promise
 		.then(function (resolve, reject) {
 			if( _this.callConfigEventHandler('file_remove_before', { file: f, item: item }) ){
@@ -527,21 +544,18 @@
 				resolve();
 				return;
 			}
-			try {
-				_this.ajax.post(fileRemoveUrl, formData, function (res) {
-					resolve(res);
-				});
-			} catch(error) {
-				console.error('[SFM] fail remove file:', fileRemoveUrl, error);
+			_this.ajax.post(fileRemoveUrl, formData, function (data, response, xhr) {
+				resolve([ data, response, xhr ]);
+			}, function (error) {
 				reject();
-				alert(_this.getConfig('message', 'file_remove_error'));
-			}
+				throw new Error();
+			});
 		})
-		.then(function (_, __, res) {
+		.then(function (_, __, param) {
 			_this.removeSelf(item);
 			_this.fileMap.remove(key);
 			
-			_this.callConfigEventHandler('file_remove_after', { response: res });
+			_this.callConfigEventHandler('file_remove_after', param);
 			
 			_this.isIngRemove  = false;
 			_this.insertDefaultHTML();
@@ -557,6 +571,11 @@
 		var item = _this.getElement(itemId);
 		var downloadUrl = _this.getConfig('url', 'file_download');
 			
+		promise.error(function (error) {
+			console.error('[SFM] fail download file:', downloadUrl, error);
+			alert(_this.getConfig('message', 'file_download_error'));
+		});
+		
 		promise
 		.then(function (resolve, reject) {
 			if( _this.callConfigEventHandler('file_download_before', { file: f, item: item }) ){
@@ -575,9 +594,8 @@
 				location.href = downloadUrl;
 				resolve();
 			} catch(error) {
-				console.error('[SFM] fail download file:', downloadUrl, error);
 				reject();
-				alert(_this.getConfig('message', 'file_download_error'));
+				throw new Error();
 			}
 		})
 		.then(function () {
@@ -595,9 +613,15 @@
 
 		var _this = this;
 		var promise = new Promise();
-		var formData = _this.makeParamFiles();
+		var formData = _this.makeParamFiles(null, true);
 		var fileUploadUrl = _this.getConfig('url', 'file_upload');
 	
+		promise.error(function (error) {
+			console.error('[SFM] fail upload:', fileUploadUrl, error);
+			_this.isIngUpload = false;
+			alert(_this.getConfig('message', 'file_upload_error'));
+		});
+		
 		promise
 		.then(function (resolve, reject) {
 			if( _this.callConfigEventHandler('file_upload_before') ){
@@ -611,18 +635,15 @@
 				resolve();
 				return;
 			}
-			try {
-				_this.ajax.post(fileUploadUrl, formData, function (res) {
-					resolve(res);
-				});
-			} catch(error) {
-				console.error('[SFM] fail upload:', fileUploadUrl, error);
+			_this.ajax.post(fileUploadUrl, formData, function (data, response, xhr) {
+				resolve([ data, response, xhr ]);
+			}, function (error) {
 				reject();
-				alert(_this.getConfig('message', 'file_upload_error'));
-			}
+				throw new Error();
+			});
 		})
-		.then(function (_, __, res) {
-			_this.callConfigEventHandler('file_upload_after', { response: res });
+		.then(function (_, __, param) {
+			_this.callConfigEventHandler('file_upload_after', param);
 			_this.isIngUpload = false;
 		});
 		
@@ -648,10 +669,13 @@
 	SimpleFileManager.prototype.makeParamFiles = function (formData, isNewFile) {
 		var formData = ( formData ) ? formData : new FormData();
 		var files = this.fileMap.array();
+		var index = 0;
 		isNewFile = ( isNewFile ) ? isNewFile : false; 
-		
-		files.forEach(function (file, i) {
-			this.setParamFormData(formData, file, true, i, isNewFile);
+		files.forEach(function (file) {
+			if( !isNewFile || ( isNewFile && file.isNewFile ) ){
+				this.setParamFormData(formData, file, true, index, isNewFile);
+				index++;
+			}
 		}.bind(this));
 		
 		return formData;
@@ -665,7 +689,7 @@
 	 * @param index 파라미터가 List형식일 때 현재 index
 	 * @param isOnlyNewFile 새로 등록된 파일들만 formData에 추가할지 여부
 	 */
-	SimpleFileManager.prototype.setParamFormData = function (formData, f, isParamTypeList, index, isOnlyNewFile) {
+	SimpleFileManager.prototype.setParamFormData = function (formData, f, isParamTypeList, index) {
 		var itemId = this.addSeparator(this.elementId.item, f.name);
 		var keyAreaElementNodes = this.getElement(itemId).querySelector('[' + this.elementId.itemKeyArea + ']').childNodes;
 		var keys = this.getConfig('key');
@@ -676,28 +700,26 @@
 		 * 
 		 * 파일 키값 세팅
 		 */
-		if( !isOnlyNewFile || ( isOnlyNewFile && f.isNewFile ) ){
-			for(i=0; i<keyAreaElementNodes.length; i++){
-				el = keyAreaElementNodes[i];
-				if(__hasProp.call(keys, el.id)){
-					formData.append(
-						this.getParamName(isParamTypeList, false, index, el.id),
-						( keys[el.id].toLowerCase() === 'number' ) ? Number(el.value) : String(el.value)
-					);
-				}
-			};
-			
-			//파일 세팅
-			formData.append( 
-				this.getParamName(isParamTypeList, true, index),
-				f,
-				/**
-				 * Blob 객체일 때 파일명 설정, 서버에서 getOriginalFilename메서드로 가져올 수 있습니다. 
-				 * Blob 객체로 업로드할 때는 이렇게 파일명을 설정해주어야 합니다. (IE 10++) 
-				 */
-				f.name
-			);
-		}
+		for(i=0; i<keyAreaElementNodes.length; i++){
+			el = keyAreaElementNodes[i];
+			if(__hasProp.call(keys, el.id)){
+				formData.append(
+					this.getParamName(isParamTypeList, false, index, el.id),
+					( keys[el.id].toLowerCase() === 'number' ) ? Number(el.value) : String(el.value)
+				);
+			}
+		};
+		
+		//파일 세팅
+		formData.append( 
+			this.getParamName(isParamTypeList, true, index),
+			f,
+			/**
+			 * Blob 객체일 때 파일명 설정, 서버에서 getOriginalFilename메서드로 가져올 수 있습니다. 
+			 * Blob 객체로 업로드할 때는 이렇게 파일명을 설정해주어야 합니다. (IE 10++) 
+			 */
+			f.name
+		);
 	}
 		
 	/**
@@ -740,17 +762,15 @@
 	/*
 	 * props.url.file_get_list 에 정의한 url에서 파일목록을 가져옵니다.
 	 */ 
-	SimpleFileManager.prototype.getFilesFromUrl = function (data) {
+	SimpleFileManager.prototype.addFilesFromUrl = function (data) {
 		var fileGetListUrl = this.getConfig('url', 'file_get_list'); 
 		var _this = this;
-		try {
-			_this.ajax.get(fileGetListUrl, data, function (files) {
-				_this.addFile(files);
-			});
-		} catch(error) {
-			console.error('[SFM] getFilesFromUrl:', fileGetListUrl, error);
+		_this.ajax.get(fileGetListUrl, data, function (files) {
+			_this.addFiles(files);
+		}, function (error) {
+			console.error('[SFM] addFilesFromUrl:', fileGetListUrl, error);
 			alert(_this.getConfig('message', 'file_get_error'));
-		}
+		});
 	}
 
 	/*
@@ -810,20 +830,19 @@
 	SimpleFileManager.prototype.callConfigEventHandler = function (handlerName, param) {
 		var option = this.option;
 		var flag = true;
-		
-		param = ( param === undefined ) ? {} : param
-		param.self = this.getElement(option.id);
-			
+		var configHandler = this.searchProp(this.config, ['eventHandler', handlerName]);
+		var optionHandler = option.eventHandler[handlerName];
+
 		/**
 		 * config 속성에 설정된 전역 이벤트핸들러 실행
 		 */
-		flag = this.searchProp(this.config, ['eventHandler', handlerName]).call(this.callee, this.copyObject(param) );
+		flag = ( Array.isArray(param) ) ? configHandler.apply(this.callee, param) : configHandler.call(this.callee, param);
 			
 		/*
-		 * SMF 생성자 옵션에 정의한 이벤트핸들러가 있다면 실행
+		 * SFM 생성자 옵션에 정의한 이벤트핸들러가 있다면 실행
 		 */
 		if( flag !== false && __hasProp.call(option, 'eventHandler') && __hasProp.call(option.eventHandler, handlerName) ){
-			flag = option.eventHandler[handlerName].call(this.callee, this.copyObject(param));
+			flag = ( Array.isArray(param) ) ? optionHandler.apply(this.callee, param) : optionHandler.call(this.callee, param);
 		}
 			
 		return ( flag === false ) ? false : true;
@@ -846,6 +865,13 @@
 		return result;
 	}
 	
+	SimpleFileManager.prototype.clear = function () {
+		var fileArea = this.getElement(this.elementId.fileArea);
+		fileArea.innerHTML = '';
+		this.fileMap.clear();
+		this.insertDefaultHTML();
+	}
+	
 	SimpleFileManager.prototype.trim = function (str) {
 		return str.replace(/\s/g, '');
 	}
@@ -857,13 +883,13 @@
 		post: function (url, formData, success, error) {
 			this.xhr( 'POST', url, formData, success, error );
 		},
-		xhr: function (method, url, formData, success ,error) {
+		xhr: function (method, url, formData, success, error) {
 			var xhr = ( window.XMLHttpRequest ) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
 							       
-			xhr.onload = function (data) {
+			xhr.onload = function (res) {
 				if (this.readyState == 4 && this.status == 200){
 					if( success ){
-						success(data.target.response, xhr);
+						success(res.target.response, res, xhr);
 					}
 				} else {
 					if( error ){
