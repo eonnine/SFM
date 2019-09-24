@@ -89,6 +89,11 @@ simpleFileManger.uploadFile();
 simpleFileManger.getNewFiles(); 
 
 /*
+ * 현재 등록되어 있는 파일들을 전부 제거합니다.
+ */
+SimpleFileManager.clear();
+
+/*
  * 등록되어 있는 파일들을 인자로 넘긴 formData객체에 추가한 뒤 반환합니다.
  * 인자로 formData를 넘기지 않는다면 파일 목록이 담긴 새 formData를 반환합니다.
  * 반환받은 formData를 서버로 요청하면 상단 예시 DTO 형태로 매핑됩니다.

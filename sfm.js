@@ -2,8 +2,8 @@
  * ******************
  * Simple File Manager *
  * ******************
- * License: MIT
- * Developed by Eg 2019-03-25
+ * (c) 2019-03-25 EonGoo J
+ * Released under the MIT License.
  */
 (function (factory) {
 	if(typeof define === 'function' && define.amd ){
@@ -525,6 +525,9 @@
 		var formData = _this.makeParamFile(f);
 		var fileRemoveUrl = _this.getConfig('url', 'file_remove');
 		
+		/*
+		 * 파일 삭제 예외 처리 
+		 */
 		promise.error(function (error) {
 			console.error('[SFM] fail remove file:', fileRemoveUrl, error);
 			_this.isIngRemove  = false;
@@ -532,13 +535,15 @@
 		});
 		
 		promise
+		/*
+		 * 파일 삭제 전처리 
+		 */
 		.then(function (resolve, reject) {
-			if( _this.callConfigEventHandler('file_remove_before', { file: f, item: item }) ){
-				resolve();
-			} else {
-				reject();
-			}
+			( _this.callConfigEventHandler('file_remove_before', { file: f, item: item }) ) ? resolve() : reject();
 		})
+			/*
+		 * 파일 삭제 
+		 */
 		.then(function (resolve, reject) {
 			if(fileRemoveUrl == null || _this.trim(fileRemoveUrl) === ''){
 				resolve();
@@ -551,6 +556,9 @@
 				throw new Error();
 			});
 		})
+		/*
+		 * 파일 삭제 후처리 
+		 */
 		.then(function (_, __, param) {
 			_this.removeSelf(item);
 			_this.fileMap.remove(key);
@@ -571,19 +579,24 @@
 		var item = _this.getElement(itemId);
 		var downloadUrl = _this.getConfig('url', 'file_download');
 			
+		/*
+		 * 파일 다운로드 예외 처리 
+		 */
 		promise.error(function (error) {
 			console.error('[SFM] fail download file:', downloadUrl, error);
 			alert(_this.getConfig('message', 'file_download_error'));
 		});
 		
 		promise
+		/*
+		 * 파일 다운로드 전처리 
+		 */
 		.then(function (resolve, reject) {
-			if( _this.callConfigEventHandler('file_download_before', { file: f, item: item }) ){
-				resolve();
-			} else {
-				reject();
-			}
+			( _this.callConfigEventHandler('file_download_before', { file: f, item: item }) ) ? resolve() : reject();
 		})
+		/*
+		 * 파일 다운로드 
+		 */
 		.then(function (resolve, reject) {
 			if(downloadUrl == null || _this.trim(downloadUrl) == ''){
 				console.warn('[SFM] downloadURL is not define');
@@ -598,6 +611,9 @@
 				throw new Error();
 			}
 		})
+		/*
+		 * 파일 다운로드 후처리 
+		 */
 		.then(function () {
 			_this.callConfigEventHandler('file_download_after');
 			_this.isIngDownload = false;
@@ -616,6 +632,9 @@
 		var formData = _this.makeParamFiles(null, true);
 		var fileUploadUrl = _this.getConfig('url', 'file_upload');
 	
+		/*
+		 * 파일 업로드 예외 처리 
+		 */
 		promise.error(function (error) {
 			console.error('[SFM] fail upload:', fileUploadUrl, error);
 			_this.isIngUpload = false;
@@ -623,13 +642,15 @@
 		});
 		
 		promise
+		/*
+		 * 파일 업로드 전처리 
+		 */
 		.then(function (resolve, reject) {
-			if( _this.callConfigEventHandler('file_upload_before') ){
-				resolve();
-			} else {
-				reject();
-			}
+			( _this.callConfigEventHandler('file_upload_before') ) ?	 resolve() : reject();
 		})
+		/*
+		 * 파일 업로드 
+		 */
 		.then(function (resolve, reject) {
 			if(fileUploadUrl == null || _this.trim(fileUploadUrl) === '' || _this.fileMap.length == 0){
 				resolve();
@@ -642,6 +663,9 @@
 				throw new Error();
 			});
 		})
+		/*
+		 * 파일 업로드 후처리 
+		 */
 		.then(function (_, __, param) {
 			_this.callConfigEventHandler('file_upload_after', param);
 			_this.isIngUpload = false;
