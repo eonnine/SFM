@@ -151,7 +151,7 @@ SFM.prototype.setConfig({
 		file_download_is_ing: '다운로드 중입니다',
 	},
 	/**
-	 *	SFM 전체 레이아웃 폼 속성
+	 * SFM 전체 레이아웃 폼 속성
 	 * SFM 객체 생성시 기본적으로 생성되는 바탕 폼
 	 * @Param fileAreaId SFM 바탕 폼 겍체에 주는 ID
 	 * @Param fileUploadId file upload 이벤트를 실행할 요소에 주는 ID
