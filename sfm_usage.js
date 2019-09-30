@@ -127,8 +127,8 @@ SFM.prototype.setConfig({
 	file: {
 		file_size: '52428800', // 사이즈 제한, 50mb
 		file_count: 0, // 등록 파일 개수 제한
-  	file_extension: [], // 파일 등록 시 허용할 확장자 (여기 선언된 확장자만 허용함)
-  	file_extension_except: [], // 파일 등록 시 제외할 확장자 (여기서 설정한 확장자의 파일은 등록하지 않음)
+  		file_extension: [], // 파일 등록 시 허용할 확장자 (여기 선언된 확장자만 허용함)
+  		file_extension_except: [], // 파일 등록 시 제외할 확장자 (여기서 설정한 확장자의 파일은 등록하지 않음)
 		file_parameter_name: 'file', //단건 파일 파라미터 기본 키값, 여러 SFM객체별로 다르게 지정하여 한 DTO로 바인딩할 수 있음.
 		file_list_parameter_name: 'files', // 다중 파일 파리미터 기본 키값, 여러 SFM객체별로 다르게 지정하여 한 DTO로 바인딩할 수 있음.
 	},
