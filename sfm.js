@@ -937,7 +937,7 @@
   	}
   	
 		this.requiredValidator(option);
-  	this.fileMap = Object.create(null);
+  	this.fileMap = new DoublyLinkedHashMap();
   	this.rowIdColumn = option.rowIdColumn;
   	this.listParameterName = option.listParameterName;
   	this.fileParameterName = option.fileParameterName || 'file';
@@ -973,16 +973,16 @@
 		this.callee.getFormDataFromArray = this.getFormDataFromArray.bind(this);
 	}
 
-	SimpleFileManagerForGrid.prototype.get = function (item) {
-		return this.fileMap[ item[this.rowIdColumn] ];
+	SimpleFileManagerForGrid.prototype.get = function (key) {
+		return this.fileMap[key];
 	}
 	
-	SimpleFileManagerForGrid.prototype.set = function (item, file) {
-		this.fileMap[ item[this.rowIdColumn] ] = file;
+	SimpleFileManagerForGrid.prototype.set = function (key, file) {
+		this.fileMap[key] = file;
 	}
 
-	SimpleFileManagerForGrid.prototype.remove = function (item) {
-		delete this.fileMap[ item[this.rowIdColumn] ];
+	SimpleFileManagerForGrid.prototype.remove = function (key) {
+		delete this.fileMap[key];
 	}
 	
 	SimpleFileManagerForGrid.prototype.clear = function (key) {
