@@ -15,7 +15,7 @@
 		module.exports = factory;
 	} else {
 		for(var key in factory){
-			this[key] = factory[key];
+			window[key] = factory[key];
 		}
 	}
 }((function (DoublyLinkedHashMap, Promise) { 'use strict'
@@ -392,7 +392,15 @@
 	 * 파일객체를 Blob객체로 새로이 생성 (파일 객체의 name속성은 불변 속성이므로 변경하기 위함)
 	 */ 
 	SimpleFileManager.prototype.createNewFile = function (f, key) {
-    var blob = new Blob([f], { type: f.type });
+		try {
+			var blob = new Blob([f], { type: f.type });
+			
+		/*
+		 * IE에서 일반 객체로 Blob객체를 생성할 때 `사용 권한이 없습니다`오류에 대해 캐치
+		 */
+		} catch (e) {
+			var blob = f;
+		}
 		blob.name = key;
 		blob.lastModified = f.lastModified || 0;
 		blob.lastModifiedDate = f.lastModifiedDate || 0;
@@ -468,7 +476,7 @@
 		var itemkeyAreaHtml = '';
 		var itemId = this.addSeparator(this.elementId.item, f.name);
 		var itemHtml = this.getConfig('item')(f, fileRemoveId, fileDownloadId);
-		
+
 		/*
 		 * 파일 키값이 저장될 element 구성
 		 */
@@ -481,7 +489,7 @@
 				itemkeyAreaHtml += '</span>';
 			}			
 		});
-				
+
 		itemHtml = '<span id="' + itemId + '">' + itemHtml + itemkeyAreaHtml + '</span>';
 		fileArea.insertAdjacentHTML('beforeend', itemHtml);
 
@@ -496,7 +504,7 @@
 				this.removeFile.bind(this, itemId, this.createNewFile(f, f.name)) 
 			);
 		}
-				
+
 		// config.item에서 정의한 함수에서 fileDownloadId가 부여된 요소가 있다면 해당 요소에 removeFile 이벤트 리스너 선언를 선언합니다.
 		if( fileDownloadElement ){
 			this.addCustomEvent(
@@ -517,7 +525,7 @@
 		}
 		this.isIngRemove  = true;	
 		this.preventEvent(e);
-		
+
 		var _this = this;
 		var promise = new Promise();
 		var key = f.name;
@@ -825,7 +833,7 @@
 		if( element._$sfmEventListeners === undefined  ){
 			element._$sfmEventListeners = Object.create(null);
 		}
-		
+
 		element._$sfmEventListeners[evtNm] = function (e) {
 			e.stopPropagation();
 			e.preventDefault();
@@ -843,7 +851,6 @@
 						this.removeEventListener(key, this._$sfmEventListeners[key]);
 						delete this._$sfmEventListeners[key];
 					}.bind(this));
-					
 					delete this._$sfmEventListeners;
 				}
 			}.bind(this));
