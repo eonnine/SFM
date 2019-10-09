@@ -2,8 +2,14 @@
 
 ##### 테이블 구조와 CSS의 의존성을 제거한 파일 업로드 모듈을 만들어 보고 싶어 개발.
 
-*configuration 및 자세한 사용법은 sfm_usage.js 에서 확인*
 
+### *Install*
+```javascript
+<script src='/modular.js'></script>
+```
+
+### *Usage*
+*configuration 및 자세한 사용법은 ./sfm_usage.js 에서 확인*
  ```javascript
 @html
 	<div id='dropzone'></div>
