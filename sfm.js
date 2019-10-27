@@ -862,17 +862,17 @@
 		var option = this.option;
 		var flag = true;
 		var configHandler = this.searchProp(this.config, ['eventHandler', handlerName]);
-		var optionHandler = option.eventHandler[handlerName];
-
+		
 		/**
 		 * config 속성에 설정된 전역 이벤트핸들러 실행
 		 */
 		flag = ( Array.isArray(param) ) ? configHandler.apply(this.callee, param) : configHandler.call(this.callee, param);
-			
+		
 		/*
-		 * SFM 생성자 옵션에 정의한 이벤트핸들러가 있다면 실행
-		 */
+		* SFM 생성자 옵션에 정의한 이벤트핸들러가 있다면 실행
+		*/
 		if( flag !== false && __hasProp.call(option, 'eventHandler') && __hasProp.call(option.eventHandler, handlerName) ){
+			var optionHandler = option.eventHandler[handlerName];
 			flag = ( Array.isArray(param) ) ? optionHandler.apply(this.callee, param) : optionHandler.call(this.callee, param);
 		}
 			
